@@ -34,7 +34,7 @@ app.get('/load-m3u', (req, res) => {
   if (!url) return res.status(400).json({ error: 'Missing url' });
   const protocol = url.startsWith('https') ? https : http;
   let data = '';
-  const request = protocol.get(url, { headers: { 'User-Agent': 'IPTV Smarters/1.0 (Android)' }
+  const request = protocol.get(url, { headers: { 'User-Agent': 'IPTV Smarters/1.0 (Android)' } }, (response) => {
     response.setEncoding('utf8');
     response.on('data', chunk => { data += chunk; });
     response.on('end', () => { res.setHeader('Access-Control-Allow-Origin', '*'); res.send(data); });
