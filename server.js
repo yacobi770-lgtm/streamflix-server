@@ -1,16 +1,36 @@
-{
-  "name": "streamflix-server",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "webtorrent": "^1.9.7"
-  },
-  "engines": {
-    "node": "20.x"
-  }
-}
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const https = require('https');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({ status: 'StreamFlix Server running' });
+});
+
+app.get('/proxy', (req, res) => {
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: 'Missing url' });
+  const protocol = url.startsWith('https') ? https : http;
+  protocol.get(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0',
+      'Range': req.headers.range || ''
+    }
+  }, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, {
+      ...proxyRes.headers,
+      'Access-Control-Allow-Origin': '*'
+    });
+    proxyRes.pipe(res);
+  }).on('error', (err) => {
+    if (!res.headersSent) res.status(500).json({ error: err.message });
+  });
+});
+
+app.listen(PORT, () => console.log(`StreamFlix Server running on port ${PORT}`));
