@@ -31,4 +31,7 @@ async def get_stream_link(episode_id: str):
         except Exception:
             raise HTTPException(status_code=500, detail="Error")
         finally:
-            await browser.close()
+            await browser.close() 
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
