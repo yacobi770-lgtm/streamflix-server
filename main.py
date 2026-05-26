@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from playwright.async_api import async_playwright
 from cachetools import TTLCache
 
@@ -12,12 +13,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return FileResponse("index.html")
+
 stream_cache = TTLCache(maxsize=1024, ttl=43200)
+
 @app.get("/api/anime/stream/{episode_id}")
 async def get_stream_link(episode_id: str):
     if episode_id in stream_cache:
         return {"stream_url": stream_cache[episode_id]}
-    
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
@@ -31,7 +37,8 @@ async def get_stream_link(episode_id: str):
         except Exception:
             raise HTTPException(status_code=500, detail="Error")
         finally:
-            await browser.close() 
+            await browser.close()
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
