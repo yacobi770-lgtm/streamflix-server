@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y \
     libnss3 \
     libnspr4 \
     libatk1.0-0 \
-    libatk-bridge2.0-0 \
     libcups2 \
     libdrm2 \
     libxkbcommon0 \
@@ -21,8 +20,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
