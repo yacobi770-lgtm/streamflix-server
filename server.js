@@ -10,7 +10,15 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
-
+app.get('/api/anime/stream/:episodeId', (req, res) => {
+  const episodes = {
+    'one-piece-1': 'https://example.com/one-piece-ep1.m3u8',
+    'naruto-1':    'https://example.com/naruto-ep1.mp4',
+  };
+  const stream_url = episodes[req.params.episodeId];
+  if (!stream_url) return res.status(404).json({ error: 'Episode not found' });
+  res.json({ stream_url });
+});
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });app.get('/proxy', (req, res) => {
