@@ -643,7 +643,44 @@ document.getElementById('playerOv').addEventListener('click', showPlayerBar);
 // ═══ UTILS ═══
 let toastTimer;
 function toast(msg) {
-  const el = document.getElementById('toast');
+  const el = document.getElementById('toast');const ANIME_API='https://streamflix-server-production-e0cc.up.railway.app/api/anime/stream';
+async function playAnimeEpisode(episodeId){
+  showLoading(true);
+  document.getElementById('mainVideo').style.display='none';
+  document.getElementById('playerOv').classList.add('open');
+  document.body.style.overflow='hidden';
+  document.getElementById('pTitle').textContent='טוען פרק...';
+  document.getElementById('pLiveBadge').style.display='none';
+  document.getElementById('pSrcBtn').style.display='none';
+  if(hlsInst){hlsInst.destroy();hlsInst=null;}
+  const video=document.getElementById('mainVideo');
+  const frame=document.getElementById('playerFrame');
+  video.pause();video.src='';video.style.display='none';
+  frame.src='';frame.style.display='none';try{
+    const res=await fetch(`${ANIME_API}/${episodeId}`);
+    if(!res.ok)throw new Error('שגיאת שרת: '+res.status);
+    const data=await res.json();
+    if(!data.stream_url)throw new Error('לא התקבל קישור');
+    const url=data.stream_url;
+    isLive=false;
+    if(url.includes('.m3u8')&&Hls.isSupported()){
+      hlsInst=new Hls();
+      hlsInst.loadSource(url);
+      hlsInst.attachMedia(video);
+      hlsInst.on(Hls.Events.MANIFEST_PARSED,()=>{video.style.display='block';showLoading(false);video.play().catch(()=>{});});
+      hlsInst.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){showLoading(false);toast('❌ שגיאה');closePlayer();}});
+    }else{
+      video.src=url;video.style.display='block';showLoading(false);video.play().catch(()=>{});
+    }
+    document.getElementById('pTitle').textContent='פרק '+episodeId;
+    showBar();
+  }catch(err){
+    showLoading(false);
+    document.getElementById('playerOv').classList.remove('open');
+    document.body.style.overflow='';
+    toast('❌ '+err.message);
+  }
+}
   el.textContent = msg;
   el.classList.add('show');
   clearTimeout(toastTimer);
