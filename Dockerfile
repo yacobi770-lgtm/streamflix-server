@@ -1,7 +1,5 @@
-# השתמש בגרסה מלאה יותר של פייתון כדי שיהיו כל הכלים הדרושים
 FROM python:3.11
 
-# התקנת כל תלויות המערכת ש-Playwright צריך
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -22,14 +20,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# עדכון pip והתקנת הדרישות
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# התקנת דפדפן Playwright ישירות
-RUN playwright install chromium && playwright install-deps
-
 COPY . .
+
+RUN playwright install chromium && playwright install-deps
 
 CMD ["python", "main.py"]
