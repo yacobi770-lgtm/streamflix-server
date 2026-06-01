@@ -1,0 +1,3263 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>StreamFlix</title>
+<meta name="description" content="אתר סטרימינג בעברית"/>
+<meta name="theme-color" content="#080C14"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="StreamFlix"/>
+<link rel="manifest" href="/manifest.json"/>
+<link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/movie-projector.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.4.12/hls.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080C14;--bg2:#0D1220;--card:#111827;--border:#1E2B45;--border2:#253556;
+  --primary:#4F8EFF;--primary2:#2563EB;--accent:#7DD3FC;--green:#34D399;
+  --gold:#FBBF24;--red:#F87171;--purple:#A78BFA;
+  --text:#F1F5FF;--text2:#94A3C0;--muted:#3A4D6E;--r2:16px;--nav:60px;
+}
+html{scroll-behavior:smooth;height:100%}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100%;overflow-x:hidden;padding-bottom:80px;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(79,142,255,0.08) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(167,139,250,0.06) 0%,transparent 55%);}
+/* ═══ PERFORMANCE & SMOOTH ANIMATIONS ═══ */
+*{-webkit-tap-highlight-color:transparent;touch-action:manipulation;box-sizing:border-box;}
+html{scroll-behavior:smooth;overscroll-behavior-y:none;}
+body{overscroll-behavior-y:none;-webkit-overflow-scrolling:touch;}
+
+/* GPU acceleration on interactive elements */
+.tcard,.grid-card,.bnav-item,.settings-row,.ep-item,.wl-item,.src-item,.sub-item{
+  will-change:transform;
+  transform:translateZ(0);
+  backface-visibility:hidden;
+}
+
+/* Ripple effect */
+.ripple{position:relative;overflow:hidden;}
+.ripple::after{
+  content:'';position:absolute;border-radius:50%;
+  background:rgba(255,255,255,0.3);
+  transform:scale(0);
+  animation:ripple-anim .5s linear;
+  pointer-events:none;
+}
+@keyframes ripple-anim{to{transform:scale(4);opacity:0;}}
+
+/* Spring animations */
+.tcard{transition:transform .18s ease,box-shadow .18s ease;}
+.tcard:hover{transform:scale(1.04) translateZ(0);}
+.tcard:active{transform:scale(0.96) translateZ(0);}
+
+.grid-card{transition:transform .15s ease;}
+.grid-card:active{transform:scale(0.95) translateZ(0);}
+
+.bnav-item{transition:transform .2s cubic-bezier(0.34,1.56,0.64,1),background .2s;}
+.bnav-item:active{transform:scale(0.9);}
+.bnav-item.active .bni{animation:navPop .3s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes navPop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1.15)}}
+
+/* Button press feedback */
+button:active{transform:scale(0.94);}
+.btn-play:active,.btn-info:active{transform:scale(0.96);}
+
+/* Glassmorphism cards */
+.tcard,.grid-card{
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+
+/* Bottom nav indicator */
+#navIndicator{
+  position:absolute;
+  bottom:0;
+  height:3px;
+  background:var(--primary);
+  border-radius:3px 3px 0 0;
+  transition:left .3s cubic-bezier(0.34,1.56,0.64,1),width .3s ease;
+}
+
+/* Smooth page transitions */
+.page.active{animation:pageIn .2s ease both;}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* Parallax hero */
+#heroSection{transform-style:preserve-3d;}
+
+/* Toast improvements */
+#toast{
+  border-radius:14px;
+  padding:0.65rem 1.2rem;
+  font-weight:700;
+  backdrop-filter:blur(20px);
+  background:rgba(20,30,50,0.95);
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  transition:all .3s cubic-bezier(0.34,1.56,0.64,1);
+}
+#toast.show{transform:translateX(-50%) translateY(0) scale(1);}
+#toast:not(.show){transform:translateX(-50%) translateY(20px) scale(0.9);}
+
+/* Scroll snap for carousels */
+.carousel{scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;}
+.tcard{scroll-snap-align:start;}
+
+/* Card shadow depth */
+.tcard:hover{box-shadow:0 12px 40px rgba(0,0,0,0.7),0 0 0 1px rgba(79,142,255,0.2);}
+
+/* Like animation */
+@keyframes likeAnim{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.4)}
+  60%{transform:scale(0.9)}
+  100%{transform:scale(1)}
+}
+.like-anim{animation:likeAnim .4s cubic-bezier(0.34,1.56,0.64,1);}
+
+/* Smooth scroll bars */
+.carousel,.genre-scroll,.sort-strip,.year-strip{
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Detail overlay smooth */
+#detailOv{transition:opacity .3s cubic-bezier(0.4,0,0.2,1);}
+
+/* Modal sheets */
+.src-sheet,.sub-sheet,.sub-settings-sheet,.shared-sheet{
+  animation:sheetUp .35s cubic-bezier(0.34,1.2,0.64,1);
+}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+
+/* Haptic-like scale on touch */
+.src-item:active,.sub-item:active,.mood-btn:active{
+  transform:scale(0.97);
+  transition:transform .1s;
+}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px}
+
+#topNav{position:fixed;top:0;left:0;right:0;z-index:200;height:var(--nav);display:flex;align-items:center;padding:0 1rem;gap:0.75rem;background:rgba(8,12,20,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:0.12em;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;cursor:pointer;flex-shrink:0;}
+#searchBar{flex:1;position:relative;}
+#searchBar input{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:24px;color:var(--text);padding:0.45rem 0.9rem 0.45rem 2.2rem;font-family:'Outfit',sans-serif;font-size:0.82rem;outline:none;transition:all .25s;}
+#searchBar input:focus{background:rgba(79,142,255,0.08);border-color:rgba(79,142,255,0.5);}
+#searchBar input::placeholder{color:var(--muted)}
+#searchBar .ico{position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);font-size:0.75rem;color:var(--muted)}
+.nav-icon-btn{width:38px;height:38px;border-radius:10px;flex-shrink:0;background:rgba(255,255,255,0.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;}
+
+#bottomNav{position:fixed;bottom:0;left:0;right:0;z-index:200;height:68px;display:flex;align-items:stretch;background:rgba(8,12,20,0.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:0 0.5rem;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.2rem;cursor:pointer;transition:all .2s;border-radius:10px;margin:0.35rem 0.1rem;padding:0.2rem;}
+.bnav-item .bni{font-size:1.25rem;transition:transform .2s}
+.bnav-item .bnl{font-size:0.58rem;font-weight:600;color:var(--muted);transition:color .2s}
+.bnav-item.active .bni{transform:scale(1.15)}
+.bnav-item.active .bnl{color:var(--primary)}
+.bnav-item.active{background:rgba(79,142,255,0.1)}
+
+#app{position:relative;z-index:1;margin-top:var(--nav)}
+.page{display:none;padding:0.9rem 0.85rem 1rem}
+.page.active{display:block;animation:fadeUp .28s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+#heroSection{position:relative;height:52vw;max-height:340px;min-height:200px;border-radius:var(--r2);overflow:hidden;margin-bottom:1.2rem;cursor:pointer;}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;}
+.hero-placeholder{position:absolute;inset:0;background:linear-gradient(135deg,#0D1E40 0%,#060D1F 100%);display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.15;}
+.hero-fog{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,12,20,1) 0%,rgba(8,12,20,0.5) 35%,rgba(8,12,20,0.1) 100%),linear-gradient(to right,rgba(8,12,20,0.8) 0%,transparent 60%);}
+.hero-content{position:absolute;bottom:1rem;right:1rem;left:1rem;}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.8rem,7vw,3rem);line-height:1;margin-bottom:0.4rem;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-tags{display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.5rem}
+.htag{font-size:0.58rem;font-weight:700;padding:0.13rem 0.4rem;border-radius:4px;letter-spacing:0.06em;text-transform:uppercase}
+.ht-blue{background:rgba(79,142,255,0.2);color:var(--accent);border:1px solid rgba(79,142,255,0.3)}
+.ht-gold{background:rgba(251,191,36,0.15);color:var(--gold);border:1px solid rgba(251,191,36,0.25)}
+.ht-green{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.25)}
+.hero-btns{display:flex;gap:0.5rem}
+.btn-play{background:var(--primary2);color:white;border:none;padding:0.52rem 1.1rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:0.35rem;box-shadow:0 4px 16px rgba(37,99,235,0.4);}
+.btn-info{background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);padding:0.52rem 1rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:600;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:0.35rem;backdrop-filter:blur(6px);}
+.hero-dots{display:flex;gap:0.35rem;margin-top:0.6rem;justify-content:center}
+.hdot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all .3s}
+.hdot.active{background:var(--primary);width:18px;border-radius:3px}
+
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem}
+.sec-title{font-size:0.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:0.4rem}
+.sec-dot{width:4px;height:4px;border-radius:50%;background:var(--primary);box-shadow:0 0 6px var(--primary)}
+.sec-all{font-size:0.68rem;color:var(--muted);cursor:pointer}
+.sec-row{margin-bottom:1.6rem}
+.carousel{display:flex;gap:0.5rem;overflow-x:auto;scrollbar-width:none;padding:0.3rem 0 0.5rem;scroll-snap-type:x mandatory;}
+.carousel::-webkit-scrollbar{display:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* CARDS */
+.tcard{flex-shrink:0;border-radius:10px;overflow:visible;cursor:pointer;background:var(--card);border:1px solid var(--border);transition:transform .25s,box-shadow .25s;scroll-snap-align:start;width:120px;position:relative;z-index:1;}
+.tcard:hover{transform:scale(1.08);box-shadow:0 8px 32px rgba(0,0,0,0.6);z-index:10;}
+.tcard:active{transform:scale(0.97)}
+
+/* Hover preview card */
+.hover-preview{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:200px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:0.75rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:100;box-shadow:0 8px 32px rgba(0,0,0,0.8);}
+.tcard:hover .hover-preview{opacity:1;}
+.hp-title{font-size:0.78rem;font-weight:700;margin-bottom:0.3rem;}
+.hp-meta{font-size:0.62rem;color:var(--muted);margin-bottom:0.4rem;}
+.hp-desc{font-size:0.6rem;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-play{width:100%;padding:0.4rem;border-radius:7px;background:var(--primary2);color:white;border:none;font-family:'Outfit',sans-serif;font-size:0.7rem;font-weight:700;cursor:pointer;margin-top:0.5rem;}
+
+/* Search suggestions */
+#searchSuggestions{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;margin-top:4px;overflow:hidden;z-index:300;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.5);}
+#searchSuggestions.show{display:block;}
+.suggestion-item{padding:0.6rem 0.9rem;cursor:pointer;font-size:0.78rem;display:flex;align-items:center;gap:0.6rem;transition:background .15s;}
+.suggestion-item:hover{background:rgba(79,142,255,0.1)}
+.suggestion-poster{width:28px;height:42px;border-radius:4px;object-fit:cover;flex-shrink:0;background:var(--card);}
+.suggestion-info{flex:1;min-width:0;}
+.suggestion-title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.suggestion-year{font-size:0.6rem;color:var(--muted);}
+
+/* Splash screen */
+#splashScreen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;transition:opacity .5s;}
+#splashScreen.hide{opacity:0;pointer-events:none;}
+.splash-logo{font-family:'Bebas Neue',sans-serif;font-size:4rem;letter-spacing:0.15em;background:linear-gradient(135deg,#fff 30%,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.splash-bar{width:200px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;}
+.splash-fill{height:100%;background:linear-gradient(to right,var(--primary),var(--accent));border-radius:2px;animation:splashLoad 1.5s ease forwards;}
+@keyframes splashLoad{from{width:0}to{width:100%}}
+.tcard-poster{position:relative;aspect-ratio:2/3;overflow:hidden;background:#060D1F}
+.tcard-poster img{width:100%;height:100%;object-fit:cover;display:block}
+.tcard-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0.1}
+.tcard-rating{position:absolute;top:0.3rem;left:0.3rem;background:rgba(0,0,0,0.7);color:var(--gold);font-size:0.55rem;font-weight:700;padding:0.1rem 0.3rem;border-radius:4px;}
+.tcard-info{padding:0.4rem 0.45rem}
+.tcard-title{font-size:0.65rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.tcard-year{font-size:0.55rem;color:var(--muted)}
+
+/* DROPDOWNS */
+.drop-row{display:flex;gap:0.5rem;margin-bottom:0.85rem;flex-wrap:wrap}
+.drop-btn{background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:0.4rem 0.85rem;border-radius:20px;font-family:'Outfit',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:0.35rem;transition:all .2s;}
+.drop-btn.selected{background:rgba(79,142,255,0.15);border-color:var(--primary);color:var(--accent)}
+.drop-btn .arr{font-size:0.6rem;transition:transform .2s}
+.drop-btn.open .arr{transform:rotate(180deg)}
+.drop-menu{position:fixed;z-index:800;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:0.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.6);max-height:55vh;overflow-y:auto;min-width:180px;scrollbar-width:none;}
+.drop-menu::-webkit-scrollbar{display:none}
+.drop-menu.hidden{display:none}
+.drop-opt{padding:0.55rem 0.85rem;border-radius:9px;font-size:0.78rem;font-weight:500;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:space-between;}
+.drop-opt:hover{background:rgba(79,142,255,0.1)}
+.drop-opt.active{background:rgba(79,142,255,0.15);color:var(--accent);font-weight:700}
+.drop-opt .check{color:var(--primary);font-size:0.8rem}
+.content-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:0.65rem}
+.grid-card{border-radius:10px;overflow:hidden;cursor:pointer;background:var(--card);border:1px solid var(--border);transition:transform .25s;}
+.grid-card:active{transform:scale(0.97)}
+.grid-poster{position:relative;aspect-ratio:2/3;overflow:hidden;background:#060D1F}
+.grid-poster img{width:100%;height:100%;object-fit:cover}
+.grid-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:0.1}
+.grid-rating{position:absolute;top:0.3rem;left:0.3rem;background:rgba(0,0,0,0.7);color:var(--gold);font-size:0.55rem;font-weight:700;padding:0.1rem 0.3rem;border-radius:4px;}
+.grid-info{padding:0.4rem}
+.grid-title{font-size:0.65rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid-year{font-size:0.55rem;color:var(--muted)}
+.load-more-btn{width:100%;padding:0.75rem;border-radius:10px;background:rgba(79,142,255,0.1);border:1px solid rgba(79,142,255,0.25);color:var(--accent);font-family:'Outfit',sans-serif;font-weight:700;font-size:0.8rem;cursor:pointer;margin-top:0.75rem;grid-column:1/-1;}
+
+/* SEARCH */
+.search-filters{display:flex;gap:0.4rem;margin-bottom:0.75rem;overflow-x:auto;scrollbar-width:none}
+.search-filters::-webkit-scrollbar{display:none}
+.sf-btn{flex-shrink:0;background:var(--card);border:1px solid var(--border);color:var(--muted);padding:0.3rem 0.8rem;border-radius:20px;font-size:0.72rem;font-weight:600;cursor:pointer;}
+.sf-btn.active{background:rgba(79,142,255,0.15);border-color:rgba(79,142,255,0.4);color:var(--accent)}
+.adv-search{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.85rem;margin-bottom:0.85rem}
+.adv-row{display:flex;gap:0.5rem;margin-bottom:0.5rem}
+.adv-inp{flex:1;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:0.5rem 0.7rem;border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.75rem;outline:none;}
+.adv-inp::placeholder{color:var(--muted)}
+.adv-inp:focus{border-color:rgba(79,142,255,0.5)}
+
+/* DETAIL */
+#detailOv{position:fixed;inset:0;background:rgba(8,12,20,0.97);z-index:700;overflow-y:auto;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(10px);}
+#detailOv.open{opacity:1;pointer-events:all}
+.detail-hero{position:relative;height:55vw;max-height:300px;background:var(--card)}
+.detail-hero img{width:100%;height:100%;object-fit:cover;object-position:center top;position:absolute;inset:0;}
+.detail-fog2{position:absolute;inset:0;background:linear-gradient(to top,rgba(8,12,20,1) 0%,rgba(8,12,20,0.2) 60%,transparent 100%);}
+.dclose{position:absolute;top:1rem;left:1rem;background:rgba(8,12,20,0.8);border:1px solid var(--border);color:white;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.9rem;z-index:5;}
+.detail-body{position:relative;padding:0 1rem 1.5rem}
+.detail-title{font-family:'Bebas Neue',sans-serif;font-size:2.2rem;background:linear-gradient(135deg,#fff,var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:0.4rem;}
+.ratings-row{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.85rem;align-items:center}
+.rating-badge{display:flex;align-items:center;gap:0.3rem;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:0.35rem 0.65rem;transition:all .2s;}
+.rating-badge:hover{border-color:var(--primary)}
+.rb-logo{font-size:0.9rem}
+.rb-score{font-size:0.78rem;font-weight:800}
+.rb-label{font-size:0.58rem;color:var(--muted)}
+.rb-imdb{border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.06)}
+.rb-imdb .rb-score{color:var(--gold)}
+.rb-rt-fresh{border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.06)}
+.rb-rt-fresh .rb-score{color:var(--green)}
+.rb-rt-rotten{border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.06)}
+.rb-rt-rotten .rb-score{color:var(--red)}
+.rb-tmdb{border-color:rgba(79,142,255,0.3);background:rgba(79,142,255,0.06)}
+.rb-tmdb .rb-score{color:var(--accent)}
+.detail-desc{font-size:0.82rem;color:rgba(241,245,255,0.65);line-height:1.72;margin-bottom:1.1rem}
+.detail-actions{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem}
+.source-btns{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem}
+.src-btn{background:var(--card);border:1px solid var(--border);color:var(--text2);padding:0.3rem 0.7rem;border-radius:7px;font-size:0.68rem;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;}
+.src-btn.active{background:rgba(79,142,255,0.15);border-color:var(--primary);color:var(--accent)}
+.sec-label{font-size:0.58rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.55rem;margin-top:1rem}
+.seasons-strip{display:flex;gap:0.4rem;overflow-x:auto;scrollbar-width:none;padding:0.3rem 0 0.6rem;}
+.seasons-strip::-webkit-scrollbar{display:none}
+.season-btn{flex-shrink:0;background:var(--card);border:1px solid var(--border);color:var(--muted);padding:0.3rem 0.8rem;border-radius:20px;font-size:0.72rem;cursor:pointer;}
+.season-btn.active{background:rgba(79,142,255,0.15);border-color:rgba(79,142,255,0.4);color:var(--accent)}
+.episodes-grid{display:grid;gap:0.4rem}
+.ep-item{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:0.6rem 0.75rem;cursor:pointer;display:flex;align-items:center;gap:0.6rem;}
+.ep-item:active{background:rgba(79,142,255,0.1)}
+.ep-num{font-size:0.65rem;font-weight:700;color:var(--muted);width:20px;flex-shrink:0;}
+.ep-title{font-size:0.75rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.ep-play{font-size:0.9rem;color:var(--primary)}
+.trailer-btn{background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);color:var(--red);padding:0.45rem 0.9rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:0.35rem;}
+.watchlist-btn{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);color:var(--green);padding:0.45rem 0.9rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.78rem;cursor:pointer;display:flex;align-items:center;gap:0.35rem;}
+.watchlist-btn.saved{background:rgba(52,211,153,0.2);border-color:var(--green)}
+
+/* PLAYER */
+#playerOv{position:fixed;inset:0;background:#000;z-index:900;opacity:0;pointer-events:none;transition:opacity .3s;display:flex;flex-direction:column;}
+#playerOv.open{opacity:1;pointer-events:all}
+#videoContainer{position:relative;flex:1;background:#000;overflow:hidden;cursor:pointer;z-index:1;}
+#mainVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;preload:auto;}
+#playerFrame{position:absolute;inset:0;width:100%;height:100%;border:none;display:none;}
+#loadingMsg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.8);font-size:0.85rem;text-align:center;z-index:6;display:none;}
+
+/* Netflix-style top bar */
+#playerBar{position:absolute;top:0;left:0;right:0;z-index:20;padding:1.2rem 1rem 3rem;background:linear-gradient(to bottom,rgba(0,0,0,0.85) 0%,transparent 100%);display:flex;align-items:center;gap:0.75rem;transition:opacity .4s,transform .4s;pointer-events:all;}
+#playerBar.hide{opacity:0;pointer-events:none;transform:translateY(-4px)}
+#pClose{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);color:white;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+#pTitle{font-size:0.9rem;font-weight:700;color:white;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.p-top-btn{background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);color:white;padding:0.35rem 0.8rem;border-radius:20px;font-family:'Outfit',sans-serif;font-size:0.7rem;font-weight:600;cursor:pointer;flex-shrink:0;}
+
+/* Buffering indicator */
+#bufferOv{position:absolute;inset:0;z-index:8;background:rgba(0,0,0,0.5);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+#bufferOv.show{display:flex;}
+#bufferPoster{width:120px;height:180px;border-radius:12px;object-fit:cover;box-shadow:0 8px 32px rgba(0,0,0,0.8);opacity:0.85;}
+#bufferSpinner{width:48px;height:48px;border-radius:50%;border:4px solid rgba(255,255,255,0.2);border-top-color:white;animation:spin .8s linear infinite;}
+#bufferText{color:rgba(255,255,255,0.7);font-size:0.78rem;font-weight:600;}
+#bufferPercent{color:white;font-size:1rem;font-weight:800;}
+#lockOv{position:absolute;inset:0;z-index:50;display:none;align-items:center;justify-content:center;}
+#lockOv.active{display:flex;}
+#lockBtn{position:absolute;bottom:1.5rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.3);color:white;padding:0.5rem 1.2rem;border-radius:20px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;}
+.lock-icon{font-size:2.5rem;opacity:0.5;}
+
+/* Subtitle settings modal */
+#subSettingsModal{position:fixed;inset:0;background:rgba(8,12,20,0.85);z-index:960;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(10px);}
+#subSettingsModal.open{opacity:1;pointer-events:all}
+.sub-settings-sheet{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:1.2rem;}
+
+/* Speed indicator */
+#speedIndicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:white;font-size:1.5rem;font-weight:900;padding:0.5rem 1.2rem;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:15;}
+#speedIndicator.show{opacity:1;}
+
+/* Volume indicator */
+#volIndicator{position:absolute;top:20%;right:10%;background:rgba(0,0,0,0.7);color:white;font-size:0.8rem;font-weight:700;padding:0.4rem 0.8rem;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:15;}
+#volIndicator.show{opacity:1;}
+
+/* Time tooltip on progress */
+#timeTooltip{position:absolute;bottom:18px;background:rgba(0,0,0,0.85);color:white;font-size:0.68rem;font-weight:700;padding:0.2rem 0.45rem;border-radius:5px;transform:translateX(-50%);pointer-events:none;display:none;white-space:nowrap;z-index:20;}
+
+/* Bookmark */
+.bookmark-dot{position:absolute;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--gold);transform:translateX(-50%);pointer-events:none;}
+
+
+/* Netflix-style bottom controls */
+#playerControls{position:absolute;bottom:0;left:0;right:0;z-index:20;padding:3rem 1rem 1.2rem;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,transparent 100%);transition:opacity .4s,transform .4s;pointer-events:all;}
+#playerControls.hide{opacity:0;pointer-events:none;transform:translateY(4px)}
+
+/* Progress bar - Netflix style */
+#progressWrap{position:relative;height:4px;background:rgba(255,255,255,0.25);border-radius:2px;cursor:pointer;margin-bottom:0.85rem;padding:10px 0;margin-top:-10px;}
+#progressWrap:active{height:6px}
+#progressBar{position:absolute;top:10px;left:0;height:4px;background:#E50914;border-radius:2px;}
+#progressDot{position:absolute;top:50%;right:calc(100% - var(--p,0%));width:14px;height:14px;border-radius:50%;background:white;transform:translate(50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,0.5);opacity:0;transition:opacity .15s;}
+#progressWrap:active #progressDot{opacity:1}
+#timeTooltip{position:absolute;bottom:20px;background:rgba(0,0,0,0.8);color:white;font-size:0.65rem;font-weight:700;padding:0.2rem 0.4rem;border-radius:4px;transform:translateX(-50%);pointer-events:none;display:none;white-space:nowrap;}
+
+/* Control row */
+.ctrl-row{display:flex;align-items:center;gap:0.6rem}
+.ctrl-btn{background:none;border:none;color:white;cursor:pointer;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;transition:transform .15s;}
+.ctrl-btn:active{transform:scale(0.88)}
+#ppBtn{font-size:1.8rem;width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:50%;}
+#timeDisplay{font-size:0.72rem;color:rgba(255,255,255,0.8);min-width:95px;text-align:center;font-weight:600;}
+.ctrl-spacer{flex:1}
+#volWrap{display:flex;align-items:center;gap:0.4rem}
+#volIcon{font-size:1rem;color:rgba(255,255,255,0.8);cursor:pointer}
+#volSlider{-webkit-appearance:none;width:60px;height:3px;border-radius:2px;outline:none;cursor:pointer;background:linear-gradient(to right,rgba(255,255,255,0.9) var(--v,100%),rgba(255,255,255,0.2) var(--v,100%));}
+#volSlider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:white;}
+
+/* Skip buttons - Netflix style */
+.skip-btn{position:relative;width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.1);color:white;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;transition:all .15s;flex-shrink:0;}
+.skip-btn:active{transform:scale(0.85);background:rgba(255,255,255,0.2);}
+.skip-btn .skip-icon{font-size:1rem;line-height:1;}
+.skip-btn .skip-num{font-size:0.5rem;font-weight:800;opacity:0.85;}
+
+/* Double tap skip effect */
+.tap-effect{position:absolute;top:50%;transform:translateY(-50%);width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:1.5rem;color:white;opacity:0;pointer-events:none;transition:opacity .3s;z-index:15;}
+.tap-effect.show{opacity:1;}
+.tap-effect.left{left:15%;}
+.tap-effect.right{right:15%;}
+.tap-effect span{font-size:0.6rem;font-weight:800;margin-top:2px;}
+
+/* SOURCE MODAL */
+#subModal{position:fixed;inset:0;background:rgba(8,12,20,0.85);z-index:960;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(10px);}
+#subModal.open{opacity:1;pointer-events:all}
+.sub-sheet{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:1.1rem;max-height:70vh;display:flex;flex-direction:column;}
+.sub-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.65rem 0.85rem;margin-bottom:0.35rem;cursor:pointer;display:flex;align-items:center;gap:0.6rem;transition:all .2s;flex-shrink:0;}
+.sub-item:active{border-color:var(--primary)}
+.sub-lang{font-size:0.65rem;font-weight:800;padding:0.1rem 0.35rem;border-radius:4px;flex-shrink:0;}
+.sub-he{background:rgba(79,142,255,0.2);color:var(--accent)}
+.sub-en{background:rgba(52,211,153,0.15);color:var(--green)}
+.sub-other{background:rgba(167,139,250,0.15);color:var(--purple)}
+.sub-name{font-size:0.75rem;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub-source{font-size:0.6rem;color:var(--muted)}
+.sub-inp{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:0.5rem 0.75rem;border-radius:9px;font-family:'Outfit',sans-serif;font-size:0.78rem;outline:none;margin-bottom:0.65rem;}
+.sub-inp::placeholder{color:var(--muted)}
+.sub-list{overflow-y:auto;flex:1;}
+#srcModal{position:fixed;inset:0;background:rgba(8,12,20,0.85);z-index:950;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(10px);}
+#srcModal.open{opacity:1;pointer-events:all}
+.src-sheet{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:1.1rem;}
+.src-handle{width:36px;height:4px;border-radius:2px;background:#2A3F6A;margin:0 auto 1rem;}
+.src-title{font-size:1rem;font-weight:800;margin-bottom:1rem}
+.src-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.75rem;margin-bottom:0.4rem;cursor:pointer;display:flex;align-items:center;gap:0.75rem;}
+.src-item:active{border-color:var(--primary)}
+.src-item-icon{font-size:1.2rem;flex-shrink:0}
+.src-item-name{font-size:0.82rem;font-weight:700}
+.src-item-desc{font-size:0.62rem;color:var(--muted)}
+.src-item-badge{font-size:0.55rem;padding:0.1rem 0.35rem;border-radius:4px;font-weight:700;flex-shrink:0;}
+.badge-best{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.25)}
+.badge-alt{background:rgba(79,142,255,0.12);color:var(--accent);border:1px solid rgba(79,142,255,0.2)}
+.btn-close-src{width:100%;margin-top:0.5rem;padding:0.65rem;border-radius:9px;background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;}
+
+/* TRAILER MODAL */
+#trailerModal{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:950;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+#trailerModal.open{opacity:1;pointer-events:all}
+.trailer-wrap{position:relative;width:100%;max-width:560px;aspect-ratio:16/9;padding:0 1rem;}
+.trailer-wrap iframe{width:100%;height:100%;border:none;border-radius:12px;}
+.trailer-close{position:absolute;top:-40px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.1);border:none;color:white;padding:0.4rem 1.2rem;border-radius:20px;font-family:'Outfit',sans-serif;font-size:0.78rem;cursor:pointer;}
+
+/* ADDONS PAGE */
+.tabs{display:flex;gap:0.35rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.3rem;margin-bottom:1rem}
+.tab{flex:1;text-align:center;padding:0.45rem 0.5rem;border-radius:7px;font-size:0.72rem;font-weight:600;cursor:pointer;color:var(--muted);}
+.tab.active{background:var(--primary2);color:white;}
+.add-panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:1rem;margin-bottom:1rem;}
+.add-panel-title{font-size:0.8rem;font-weight:700;margin-bottom:0.75rem;color:var(--text);display:flex;align-items:center;gap:0.4rem}
+.input-group{margin-bottom:0.65rem}
+.input-group label{font-size:0.68rem;font-weight:600;color:var(--text2);display:block;margin-bottom:0.25rem;}
+.inp{width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text);padding:0.6rem 0.85rem;border-radius:9px;font-family:'Outfit',sans-serif;font-size:0.8rem;outline:none;direction:ltr;}
+.inp:focus{border-color:rgba(79,142,255,0.5);}
+.inp::placeholder{color:var(--muted)}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.4rem;margin-top:0.25rem}
+.type-btn{padding:0.42rem 0.3rem;border-radius:8px;text-align:center;background:var(--bg2);border:1px solid var(--border);font-size:0.65rem;font-weight:600;cursor:pointer;color:var(--muted);}
+.type-btn.sel{background:rgba(79,142,255,0.15);border-color:rgba(79,142,255,0.4);color:var(--accent)}
+.btn-full{width:100%;background:linear-gradient(135deg,var(--primary2),var(--primary));color:white;border:none;padding:0.68rem;border-radius:9px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;margin-top:0.3rem;}
+.addon-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r2);padding:0.9rem;margin-bottom:0.55rem;display:flex;gap:0.75rem;align-items:flex-start;}
+.ac-icon{width:44px;height:44px;border-radius:10px;flex-shrink:0;background:rgba(79,142,255,0.1);border:1px solid rgba(79,142,255,0.2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;}
+.ac-body{flex:1;min-width:0}
+.ac-head{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.2rem}
+.ac-name{font-weight:700;font-size:0.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac-badge{font-size:0.52rem;font-weight:700;padding:0.1rem 0.35rem;border-radius:4px;}
+.ab-on{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.25)}
+.ac-url{font-size:0.62rem;color:var(--muted);direction:ltr;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:0.3rem}
+.ac-type{font-size:0.56rem;background:rgba(79,142,255,0.08);color:var(--accent);padding:0.08rem 0.28rem;border-radius:3px;border:1px solid rgba(79,142,255,0.15);display:inline-block;margin-bottom:0.4rem}
+.ac-actions{display:flex;gap:0.35rem}
+.ac-btn{flex:1;padding:0.35rem 0;border-radius:7px;font-family:'Outfit',sans-serif;font-size:0.68rem;font-weight:600;cursor:pointer;text-align:center;border:1px solid var(--border);background:transparent;color:var(--text2);}
+.ac-btn.danger{color:var(--red);border-color:rgba(248,113,113,0.2)}
+.preset-grid{display:grid;grid-template-columns:1fr;gap:0.45rem}
+.preset-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.7rem;cursor:pointer;display:flex;align-items:center;gap:0.55rem;}
+.preset-item:active{transform:scale(0.97)}
+.pi-ico{font-size:1.3rem;flex-shrink:0}
+.pi-name{font-size:0.72rem;font-weight:700;margin-bottom:0.1rem}
+.pi-desc{font-size:0.6rem;color:var(--muted)}
+
+/* PROFILE PAGE */
+.profile-header{text-align:center;padding:1.2rem 0 1.5rem}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--primary2),var(--purple));display:flex;align-items:center;justify-content:center;font-size:2.2rem;margin:0 auto 0.75rem;box-shadow:0 4px 20px rgba(79,142,255,0.3);}
+.profile-name{font-weight:800;font-size:1.1rem}
+.profile-sub{font-size:0.72rem;color:var(--muted);margin-top:0.15rem}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1.2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:0.85rem 0.5rem;text-align:center;}
+.stat-num{font-size:1.4rem;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{font-size:0.6rem;color:var(--muted);margin-top:0.1rem}
+.settings-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:0.45rem;cursor:pointer;}
+.sr-left{display:flex;align-items:center;gap:0.6rem}
+.sr-ico{font-size:1rem;width:22px;text-align:center}
+.sr-label{font-size:0.8rem;font-weight:500}
+.sr-right{font-size:0.75rem;color:var(--muted)}
+.achievement{display:flex;align-items:center;gap:0.6rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.6rem 0.8rem;margin-bottom:0.4rem;}
+.ach-ico{font-size:1.3rem;flex-shrink:0}
+.ach-name{font-size:0.75rem;font-weight:700}
+.ach-desc{font-size:0.6rem;color:var(--muted)}
+
+/* WATCHLIST/HISTORY */
+.wl-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:0.7rem;margin-bottom:0.45rem;display:flex;gap:0.7rem;align-items:center;cursor:pointer;}
+.wl-poster{width:42px;height:63px;border-radius:7px;object-fit:cover;background:var(--bg2);flex-shrink:0;}
+.wl-info{flex:1;min-width:0}
+.wl-title{font-size:0.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-meta{font-size:0.62rem;color:var(--muted);margin-top:0.15rem}
+.wl-del{background:none;border:none;color:var(--red);font-size:1rem;cursor:pointer;flex-shrink:0;padding:0.25rem;}
+
+/* MISC */
+.page-title{font-size:1.3rem;font-weight:800;margin-bottom:0.2rem;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.page-sub{font-size:0.75rem;color:var(--text2);margin-bottom:1rem}
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--muted);}
+.empty-state .ei{font-size:2.5rem;margin-bottom:0.75rem;opacity:0.4}
+.empty-state p{font-size:0.8rem;line-height:1.6}
+.mood-btn{background:var(--card);border:1px solid var(--border);color:var(--text);padding:0.35rem 0.7rem;border-radius:20px;font-size:0.72rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;}
+.mood-btn:active{background:rgba(79,142,255,0.15);border-color:var(--primary);color:var(--accent);}
+.search-hist-item{display:inline-flex;align-items:center;gap:0.3rem;background:var(--card);border:1px solid var(--border);padding:0.25rem 0.6rem;border-radius:20px;font-size:0.68rem;cursor:pointer;margin:0 0.25rem 0.25rem 0;}
+.search-hist-item:hover{border-color:var(--primary);color:var(--accent);}
+
+/* Light theme */
+body.light{--bg:#F0F2F5;--bg2:#FFFFFF;--card:#FFFFFF;--border:#E2E8F0;--border2:#CBD5E1;--text:#1A202C;--text2:#4A5568;--muted:#A0AEC0;}
+body.light #topNav,body.light #bottomNav{background:rgba(240,242,245,0.97);}
+body.light .tcard,body.light .grid-card{box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+
+/* Shared watchlist modal */
+#sharedModal{position:fixed;inset:0;background:rgba(8,12,20,0.85);z-index:950;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(10px);}
+#sharedModal.open{opacity:1;pointer-events:all}
+.shared-sheet{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:1.2rem;}
+.shared-code{font-size:2rem;font-weight:900;letter-spacing:0.3em;text-align:center;color:var(--accent);background:rgba(79,142,255,0.1);padding:0.75rem;border-radius:10px;margin:0.75rem 0;font-family:monospace;}
+
+/* Rewatch overlay */
+#rewatchOv{position:absolute;inset:0;z-index:25;background:rgba(8,12,20,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;}
+#rewatchOv.show{display:flex;}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SKELETON LOADING */
+.skeleton{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,0.06) 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-card{flex-shrink:0;border-radius:10px;overflow:hidden;background:var(--card);border:1px solid var(--border);width:120px;scroll-snap-align:start;}
+.sk-poster{aspect-ratio:2/3;width:100%;}
+.sk-info{padding:0.4rem 0.45rem}
+.sk-line{height:8px;border-radius:4px;margin-bottom:0.3rem;}
+.sk-line-short{width:55%;}
+.sk-grid-card{border-radius:10px;overflow:hidden;background:var(--card);border:1px solid var(--border);}
+.sk-grid-poster{aspect-ratio:2/3;width:100%;}
+
+/* PAGE TRANSITIONS */
+@keyframes pageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:#161f32;border:1px solid var(--border2);border-radius:10px;padding:0.55rem 1.1rem;font-size:0.78rem;font-weight:600;color:var(--text);z-index:1000;opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 28px rgba(0,0,0,0.5);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.surprise-btn{width:100%;padding:1rem;border-radius:14px;background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(79,142,255,0.1));border:1px solid rgba(167,139,250,0.3);color:var(--purple);font-family:'Outfit',sans-serif;font-weight:800;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;margin-bottom:1.2rem;}
+.profiles-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.85rem;margin-top:0.5rem}
+.profile-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem 0.75rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.profile-card:active{transform:scale(0.97)}
+.profile-card.active-profile{border-color:var(--primary);background:rgba(79,142,255,0.08)}
+.pc-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 0.6rem;border:3px solid transparent;}
+.profile-card.active-profile .pc-avatar{border-color:var(--primary)}
+.pc-name{font-size:0.82rem;font-weight:700;margin-bottom:0.2rem}
+.pc-sub{font-size:0.62rem;color:var(--muted)}
+.pc-check{position:absolute;top:0.5rem;left:0.5rem;color:var(--primary);font-size:1rem;display:none}
+.profile-card.active-profile .pc-check{display:block}
+.add-profile-card{background:rgba(79,142,255,0.05);border:1.5px dashed var(--border);border-radius:14px;padding:1.2rem 0.75rem;text-align:center;cursor:pointer;transition:all .2s;}
+.next-ep-bar{position:fixed;bottom:80px;left:0;right:0;z-index:800;background:rgba(8,12,20,0.95);border-top:1px solid var(--border);padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;transform:translateY(100%);transition:transform .4s;backdrop-filter:blur(10px);}
+.next-ep-bar.show{transform:translateY(0)}
+.next-ep-info{flex:1;min-width:0}
+.next-ep-title{font-size:0.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.next-ep-sub{font-size:0.62rem;color:var(--muted);margin-top:0.1rem}
+.next-ep-countdown{font-size:1.1rem;font-weight:800;color:var(--accent);flex-shrink:0;min-width:36px;text-align:center}
+.next-ep-play{background:var(--primary2);color:white;border:none;padding:0.4rem 0.85rem;border-radius:8px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.72rem;cursor:pointer;flex-shrink:0;}
+.next-ep-skip{background:transparent;color:var(--muted);border:none;font-size:0.7rem;cursor:pointer;flex-shrink:0;padding:0.3rem;}
+.release-date{font-size:0.62rem;color:var(--accent);margin-top:0.15rem;display:flex;align-items:center;gap:0.25rem}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splashScreen">
+  <div class="splash-logo">StreamFlix</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<nav id="topNav">
+  <div class="logo" onclick="goPage('home')">SF</div>
+  <div id="searchBar" style="position:relative">
+    <span class="ico">🔍</span>
+    <input type="text" placeholder="חיפוש סרטים, סדרות, שחקנים..." id="searchInput" oninput="handleSearch(this.value)" onfocus="goPage('search');showSuggestions(this.value)" onblur="setTimeout(hideSuggestions,200)"/>
+    <div id="searchSuggestions"></div>
+  </div>
+  <div class="nav-icon-btn" onclick="goPage('watchlist')">🔖</div>
+</nav>
+
+<div id="app">
+
+  <!-- HOME -->
+  <div class="page active" id="pg-home">
+    <div id="heroSection" onclick="currentHeroItem&&openDetail(currentHeroItem)">
+      <div class="hero-placeholder">🎬</div>
+      <img class="hero-bg" id="heroBg" src="" style="display:none"/>
+      <div class="hero-fog"></div>
+      <div class="hero-content">
+        <div class="hero-title" id="heroTitle">טוען...</div>
+        <div class="hero-tags" id="heroTags"></div>
+        <div class="hero-btns">
+          <button class="btn-play" onclick="event.stopPropagation();currentHeroItem&&openDetail(currentHeroItem)">▶ צפה עכשיו</button>
+          <button class="btn-info" onclick="event.stopPropagation();currentHeroItem&&openDetail(currentHeroItem)">ℹ פרטים</button>
+        </div>
+      </div>
+    </div>
+    <div class="hero-dots" id="heroDots"></div>
+
+    <button class="surprise-btn" onclick="surpriseMe()">🎲 הפתע אותי — בחר סרט אקראי</button>
+
+    <div class="sec-row">
+      <div class="sec-head"><div class="sec-title"><span class="sec-dot"></span> 🔥 טרנדינג עכשיו</div><div class="sec-all" onclick="goPage('movies')">הכל</div></div>
+      <div class="carousel" id="trendingCarousel"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    </div>
+    <div class="sec-row">
+      <div class="sec-head"><div class="sec-title"><span class="sec-dot"></span> 🎬 סרטים פופולריים</div><div class="sec-all" onclick="goPage('movies')">הכל</div></div>
+      <div class="carousel" id="moviesCarousel"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    </div>
+    <div class="sec-row">
+      <div class="sec-head"><div class="sec-title"><span class="sec-dot"></span> 📺 סדרות פופולריות</div><div class="sec-all" onclick="goPage('series')">הכל</div></div>
+      <div class="carousel" id="seriesCarousel"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    </div>
+    <div class="sec-row">
+      <div class="sec-head"><div class="sec-title"><span class="sec-dot"></span> ⭐ מדורגים עליון</div></div>
+      <div class="carousel" id="topCarousel"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    </div>
+    <div class="sec-row">
+      <div class="sec-head"><div class="sec-title"><span class="sec-dot"></span> 🇮🇱 טרנדינג בישראל</div></div>
+      <div class="carousel" id="topIsraelCarousel"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    </div>
+    <div class="sec-row">
+      <div class="sec-head"><div class="sec-title"><span class="sec-dot"></span> 🆕 חדש השבוע</div></div>
+      <div class="carousel" id="newCarousel"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    </div>
+  </div>
+
+  <!-- MOVIES -->
+  <div class="page" id="pg-movies">
+    <div class="genre-page-header" style="margin-bottom:0.75rem">
+      <div style="font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">🎬 סרטים</div>
+      <div style="font-size:0.75rem;color:var(--text2);margin-top:0.2rem" id="moviesCount">טוען...</div>
+    </div>
+    <div class="drop-row">
+      <button class="drop-btn" id="movieGenreBtn" onclick="openDrop('movieGenre',this)">🎭 ז'אנר <span class="arr">▾</span></button>
+      <button class="drop-btn" id="movieSortBtn" onclick="openDrop('movieSort',this)">📊 מיון <span class="arr">▾</span></button>
+      <button class="drop-btn" id="movieYearBtn" onclick="openDrop('movieYear',this)">📅 שנה <span class="arr">▾</span></button>
+    </div>
+    <div class="content-grid" id="moviesGrid"><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+  </div>
+
+  <!-- SERIES -->
+  <div class="page" id="pg-series">
+    <div class="genre-page-header" style="margin-bottom:0.75rem">
+      <div style="font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">📺 סדרות</div>
+      <div style="font-size:0.75rem;color:var(--text2);margin-top:0.2rem" id="seriesCount">טוען...</div>
+    </div>
+    <div class="drop-row">
+      <button class="drop-btn" id="seriesGenreBtn" onclick="openDrop('seriesGenre',this)">🎭 ז'אנר <span class="arr">▾</span></button>
+      <button class="drop-btn" id="seriesSortBtn" onclick="openDrop('seriesSort',this)">📊 מיון <span class="arr">▾</span></button>
+      <button class="drop-btn" id="seriesYearBtn" onclick="openDrop('seriesYear',this)">📅 שנה <span class="arr">▾</span></button>
+    </div>
+    <div class="content-grid" id="seriesGrid"><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="page" id="pg-search">
+    <div class="search-filters">
+      <div class="sf-btn active" onclick="setFilter('all')">הכל</div>
+      <div class="sf-btn" onclick="setFilter('movie')">סרטים</div>
+      <div class="sf-btn" onclick="setFilter('tv')">סדרות</div>
+      <div class="sf-btn" onclick="startVoiceSearch()">🎤 קולי</div>
+    </div>
+    <!-- Mood search -->
+    <div style="margin-bottom:0.75rem">
+      <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.4rem;font-weight:600">🎭 חפש לפי מצב רוח</div>
+      <div style="display:flex;gap:0.35rem;flex-wrap:wrap">
+        <button class="mood-btn" onclick="moodSearch('comedy')">😂 מצחיק</button>
+        <button class="mood-btn" onclick="moodSearch('action')">💥 פעולה</button>
+        <button class="mood-btn" onclick="moodSearch('romantic')">💕 רומנטי</button>
+        <button class="mood-btn" onclick="moodSearch('thriller')">😱 מותחן</button>
+        <button class="mood-btn" onclick="moodSearch('horror')">👻 אימה</button>
+        <button class="mood-btn" onclick="moodSearch('family')">👨‍👩‍👧 משפחה</button>
+        <button class="mood-btn" onclick="moodSearch('scifi')">🚀 מדע בדיוני</button>
+        <button class="mood-btn" onclick="moodSearch('documentary')">📽 תיעודי</button>
+      </div>
+    </div>
+    <!-- Search history -->
+    <div id="searchHistory" style="margin-bottom:0.6rem"></div>
+    <div class="adv-search">
+      <div style="font-size:0.72rem;font-weight:700;margin-bottom:0.5rem;color:var(--text2)">🔍 חיפוש מתקדם</div>
+      <div class="adv-row">
+        <input class="adv-inp" id="advActor" placeholder="שחקן / במאי" dir="rtl"/>
+        <input class="adv-inp" id="advYear" placeholder="שנה" type="number" style="width:90px;flex:none"/>
+      </div>
+      <div class="adv-row">
+        <input class="adv-inp" id="advCountry" placeholder="מדינה (en, he, ar...)" style="direction:ltr"/>
+        <button class="btn-full" style="width:auto;padding:0.5rem 1rem;margin-top:0;font-size:0.72rem" onclick="doAdvSearch()">חפש</button>
+      </div>
+    </div>
+    <div class="content-grid" id="searchGrid">
+      <div class="empty-state" style="grid-column:1/-1"><div class="ei">🔍</div><p>חפש סרט, סדרה, שחקן...</p></div>
+    </div>
+  </div>
+
+  <!-- ADDONS -->
+  <div class="page" id="pg-addons">
+    <div class="page-title">🧩 תוספים</div>
+    <div class="page-sub">חבר מקורות תוכן — Stremio, M3U, Google Drive ועוד</div>
+    <div class="tabs">
+      <div class="tab active" onclick="switchAddonTab('my')" id="atab-my">התוספים שלי</div>
+      <div class="tab" onclick="switchAddonTab('browse')" id="atab-browse">גלה</div>
+    </div>
+    <div id="apanel-my"><div id="addonList"></div></div>
+    <div id="apanel-browse" style="display:none">
+      <div style="font-size:0.72rem;color:var(--text2);margin-bottom:0.75rem">תוספים מוכנים לחיבור:</div>
+      <div class="preset-grid" id="presetGrid"></div>
+    </div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div class="page" id="pg-watchlist">
+    <div class="page-title">🔖 רשימת צפייה</div>
+    <div class="page-sub">הסרטים והסדרות שרצית לצפות</div>
+    <div id="watchlistContent"></div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="page" id="pg-profile">
+    <div class="profile-header">
+      <div class="profile-avatar" id="profileAvatar">🎬</div>
+      <div class="profile-name" id="profileName">StreamFlix</div>
+      <div class="profile-sub">הפרופיל שלי</div>
+    </div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="sec-label">🏆 הישגים</div>
+    <div id="achievementsList"></div>
+    <div class="sec-label">📜 היסטוריית צפייה</div>
+    <div id="historyList"></div>
+    <div class="sec-label">⚙️ הגדרות</div>
+    <div class="settings-row" onclick="goPage('profiles')"><div class="sr-left"><span class="sr-ico">👥</span><span class="sr-label">החלף פרופיל</span></div><div class="sr-right">› </div></div>
+    <div class="settings-row" onclick="toggleTheme()"><div class="sr-left"><span class="sr-ico" id="themeIco">🌙</span><span class="sr-label">מצב לילה/יום</span></div><div class="sr-right" id="themeLabel">לילה</div></div>
+    <div class="settings-row" onclick="toggleDataSaver()"><div class="sr-left"><span class="sr-ico">📶</span><span class="sr-label">חיסכון בנתונים</span></div><div class="sr-right" id="dataSaverLabel">כבוי</div></div>
+    <div class="settings-row" onclick="openSharedList()"><div class="sr-left"><span class="sr-ico">👥</span><span class="sr-label">רשימת צפייה משותפת</span></div><div class="sr-right" style="color:var(--accent)">פתח ›</div></div>
+    <div class="settings-row" onclick="clearStorage()"><div class="sr-left"><span class="sr-ico">🗑</span><span class="sr-label">נקה נתונים</span></div><div class="sr-right" style="color:var(--red)">נקה ›</div></div>
+    <div class="settings-row" id="installRow" style="display:none" onclick="installPWA()"><div class="sr-left"><span class="sr-ico">📱</span><span class="sr-label">הוסף לדף הבית</span></div><div class="sr-right" style="color:var(--accent)">התקן ›</div></div>
+    <div class="settings-row"><div class="sr-left"><span class="sr-ico">ℹ️</span><span class="sr-label">גרסה</span></div><div class="sr-right">StreamFlix v3.0</div></div>
+  </div>
+
+  <!-- PROFILES PAGE -->
+  <div class="page" id="pg-profiles">
+    <div class="page-title">👥 פרופילים</div>
+    <div class="page-sub">בחר פרופיל לצפייה</div>
+    <div class="profiles-grid" id="profilesGrid"></div>
+  </div>
+
+  <!-- CONTINUE WATCHING -->
+  <div class="page" id="pg-continue">
+    <div class="page-title">▶️ המשך צפייה</div>
+    <div class="page-sub">המשך מאיפה עצרת</div>
+    <div id="continueList"></div>
+  </div>
+
+</div>
+
+<nav id="bottomNav">
+  <div id="navIndicator"></div>
+  <div class="bnav-item active" id="bn-home" onclick="goPage('home')"><span class="bni">🏠</span><span class="bnl">בית</span></div>
+  <div class="bnav-item" id="bn-movies" onclick="goPage('movies')"><span class="bni">🎬</span><span class="bnl">סרטים</span></div>
+  <div class="bnav-item" id="bn-search" onclick="goPage('search')"><span class="bni">🔍</span><span class="bnl">חיפוש</span></div>
+  <div class="bnav-item" id="bn-series" onclick="goPage('series')"><span class="bni">📺</span><span class="bnl">סדרות</span></div>
+  <div class="bnav-item" id="bn-profile" onclick="goPage('profile')"><span class="bni">👤</span><span class="bnl">פרופיל</span></div>
+</nav>
+
+<!-- DETAIL -->
+<div id="detailOv">
+  <div class="detail-hero">
+    <div class="hero-placeholder">🎬</div>
+    <img id="detailBg" src="" style="display:none"/>
+    <div class="detail-fog2"></div>
+    <div class="dclose" onclick="closeDetail()">✕</div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-title" id="detailTitle"></div>
+    <div class="detail-meta" id="detailMeta"></div>
+    <div class="ratings-row" id="ratingsRow"></div>
+    <div class="detail-desc" id="detailDesc"></div>
+    <div class="detail-actions" id="detailActions"></div>
+    <div class="source-btns" id="sourceBtns"></div>
+    <div id="episodesSection" style="display:none">
+      <div class="sec-label">עונות ופרקים</div>
+      <div class="seasons-strip" id="seasonsStrip"></div>
+      <div class="episodes-grid" id="episodesGrid"></div>
+    </div>
+    <div class="sec-label">דומה לזה</div>
+    <div class="content-grid" id="similarCarousel"></div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div id="playerOv">
+  <div id="videoContainer" onclick="handleVideoTap(event)">
+      <div class="tap-effect left" id="tapLeft">⏪<span>10s</span></div>
+      <div class="tap-effect right" id="tapRight">⏩<span>10s</span></div>
+      <div id="timeTooltip"></div>
+    <div id="loadingMsg"><div class="spinner" style="margin-bottom:0.5rem"></div>טוען...</div>
+    <video id="mainVideo" playsinline webkit-playsinline preload="auto"></video>
+    <iframe id="playerFrame" allowfullscreen allow="autoplay; fullscreen; encrypted-media"></iframe>
+    <div id="playerBar">
+      <button id="pClose" onclick="closePlayer(event)">✕</button>
+      <span id="pTitle">טוען...</span>
+      <button class="p-top-btn" id="pSubBtn" onclick="openSubModal(event)" style="display:none">💬 כתוביות</button>
+      <button class="p-top-btn" id="pSubSettingsBtn" onclick="openSubSettings()" style="display:none">⚙️ כת'</button>
+      <button class="p-top-btn" id="pSrcBtn" onclick="openSrcModal(event)" style="display:none">🔀 מקור</button>
+      <button class="p-top-btn" onclick="togglePiP(event)">⧉ PiP</button>
+      <button class="p-top-btn" onclick="toggleLock(event)">🔒</button>
+      <button class="p-top-btn" id="pFsTop" onclick="toggleFS(event)">⛶</button>
+    </div>
+    <div id="bufferOv">
+      <img id="bufferPoster" src="" style="display:none"/>
+      <div id="bufferSpinner"></div>
+      <div id="bufferText">טוען...</div>
+      <div id="bufferPercent"></div>
+    </div>
+    <div id="lockOv">
+      <span class="lock-icon">🔒</span>
+      <button id="lockBtn" onclick="toggleLock(event)">🔓 בטל נעילה</button>
+    </div>
+    <div id="speedIndicator"></div>
+    <div id="volIndicator">🔊</div>
+    <div id="playerControls" onclick="event.stopPropagation()">
+      <div id="progressWrap" id="progressWrap">
+        <div id="progressBar" style="width:0%"></div>
+        <div id="progressDot"></div>
+      </div>
+      <div class="ctrl-row">
+        <button class="skip-btn" onclick="skipB(event)">
+          <span class="skip-icon">⏪</span>
+          <span class="skip-num">10s</span>
+        </button>
+        <button class="ctrl-btn" onclick="togglePlay(event)" id="ppBtn">⏸</button>
+        <button class="skip-btn" onclick="skipF(event)">
+          <span class="skip-icon">⏩</span>
+          <span class="skip-num">10s</span>
+        </button>
+        <div id="volWrap">
+          <span id="volIcon" onclick="toggleMute()">🔊</span>
+          <input type="range" id="volSlider" min="0" max="100" value="100" oninput="setVol(this)" style="--v:100%" onclick="e=>e.stopPropagation()"/>
+        </div>
+        <span id="timeDisplay">0:00 / 0:00</span>
+        <div class="ctrl-spacer"></div>
+        <button class="p-top-btn" id="speedBtn" onclick="cycleSpeed(event)">1x</button>
+        <button class="p-top-btn" onclick="addBookmark(event)">🔖</button>
+        <button class="ctrl-btn" onclick="toggleFS(event)" style="font-size:1.4rem;width:44px;height:44px;background:rgba(255,255,255,0.1);border-radius:10px;">⛶</button>
+      </div>
+    </div>
+
+
+    <!-- NEXT EPISODE OVERLAY -->
+    <div id="nextEpOv" style="display:none;position:absolute;bottom:6rem;left:0.75rem;right:0.75rem;z-index:20;background:rgba(8,12,20,0.95);border:1px solid rgba(79,142,255,0.3);border-radius:16px;padding:1rem;backdrop-filter:blur(16px);box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+      <div style="font-size:0.62rem;color:var(--muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.08em">הפרק הבא מתחיל בעוד</div>
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <div id="nextEpCountdown" style="font-size:2.5rem;font-weight:900;color:var(--accent);min-width:50px;line-height:1">10</div>
+        <div style="flex:1;min-width:0">
+          <div id="nextEpTitle" style="font-size:0.85rem;font-weight:700;margin-bottom:0.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <div id="nextEpSub" style="font-size:0.65rem;color:var(--muted)"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:0.5rem;margin-top:0.75rem">
+        <button onclick="playNextEp()" style="flex:1;background:var(--primary2);color:white;border:none;padding:0.6rem;border-radius:10px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer;">▶ צפה בפרק הבא</button>
+        <button onclick="skipNextEp()" style="background:rgba(255,255,255,0.08);color:var(--muted);border:1px solid var(--border);padding:0.6rem 0.9rem;border-radius:10px;font-size:0.78rem;cursor:pointer;font-family:'Outfit',sans-serif;">✕</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUBTITLE MODAL -->
+<!-- NEXT EPISODE - inside player only -->
+
+<div id="subModal" onclick="if(event.target===this)closeSubModal()">
+  <div class="sub-sheet">
+    <div class="src-handle"></div>
+    <div class="src-title">💬 כתוביות</div>
+    <input class="sub-inp" id="subSearch" placeholder="🔍 חפש כתוביות..." oninput="filterSubs(this.value)"/>
+    <div class="sub-list" id="subList"><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div></div>
+    <button class="btn-close-src" onclick="closeSubModal()">סגור</button>
+  </div>
+</div>
+
+<!-- SUBTITLE SETTINGS MODAL -->
+<div id="subSettingsModal" onclick="if(event.target===this)closeSubSettings()">
+  <div class="sub-settings-sheet">
+    <div class="src-handle"></div>
+    <div class="src-title">⚙️ הגדרות כתוביות</div>
+    <div style="margin-bottom:1rem">
+      <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem">גודל</div>
+      <div style="display:flex;gap:0.4rem">
+        <button class="src-btn" onclick="setSubSize(80)">קטן</button>
+        <button class="src-btn active" onclick="setSubSize(100)">רגיל</button>
+        <button class="src-btn" onclick="setSubSize(130)">גדול</button>
+        <button class="src-btn" onclick="setSubSize(160)">ענק</button>
+      </div>
+    </div>
+    <div style="margin-bottom:1rem">
+      <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem">צבע</div>
+      <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
+        <button class="src-btn active" onclick="setSubColor('white')" style="color:white">לבן</button>
+        <button class="src-btn" onclick="setSubColor('yellow')" style="color:#FBBF24">צהוב</button>
+        <button class="src-btn" onclick="setSubColor('#7DD3FC')" style="color:#7DD3FC">כחול</button>
+        <button class="src-btn" onclick="setSubColor('#34D399')" style="color:#34D399">ירוק</button>
+      </div>
+    </div>
+    <div style="margin-bottom:1rem">
+      <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.5rem">מיקום</div>
+      <div style="display:flex;gap:0.4rem">
+        <button class="src-btn" onclick="setSubPosition(80)">למעלה</button>
+        <button class="src-btn active" onclick="setSubPosition(90)">אמצע</button>
+        <button class="src-btn" onclick="setSubPosition(95)">למטה</button>
+      </div>
+    </div>
+    <button class="btn-close-src" onclick="closeSubSettings()">סגור</button>
+  </div>
+</div>
+
+<!-- SHARED WATCHLIST MODAL -->
+<div id="sharedModal" onclick="if(event.target===this)closeSharedModal()">
+  <div class="shared-sheet">
+    <div class="src-handle"></div>
+    <div class="src-title">👥 רשימת צפייה משותפת</div>
+    <div style="font-size:0.75rem;color:var(--text2);margin-bottom:0.75rem">שתף את הקוד עם חבר כדי לצפות ברשימה שלך</div>
+    <div class="shared-code" id="sharedCode">----</div>
+    <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem">
+      <button class="btn-full" style="margin-top:0" onclick="copySharedCode()">📋 העתק קוד</button>
+      <button class="btn-full" style="margin-top:0;background:rgba(52,211,153,0.15);color:var(--green)" onclick="shareWhatsApp()">📱 WhatsApp</button>
+    </div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.4rem">הכנס קוד של חבר:</div>
+    <div style="display:flex;gap:0.5rem">
+      <input class="inp" id="friendCode" placeholder="קוד חבר" style="letter-spacing:0.2em;text-align:center;direction:ltr" maxlength="6"/>
+      <button class="btn-full" style="margin-top:0;width:auto;padding:0.6rem 1rem" onclick="loadFriendList()">טען</button>
+    </div>
+    <div id="friendListContent" style="margin-top:0.75rem"></div>
+    <button class="btn-close-src" onclick="closeSharedModal()">סגור</button>
+  </div>
+</div>
+
+<!-- REWATCH OVERLAY (inside player) -->
+<div id="rewatchOv">
+  <div style="font-size:3rem">🎬</div>
+  <div style="font-size:1.1rem;font-weight:800;color:white" id="rewatchTitle"></div>
+  <div style="font-size:0.78rem;color:rgba(255,255,255,0.6)">הסרט הסתיים</div>
+  <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
+    <button onclick="rewatchMovie()" style="background:var(--primary2);color:white;border:none;padding:0.6rem 1.2rem;border-radius:10px;font-family:'Outfit',sans-serif;font-weight:700;font-size:0.82rem;cursor:pointer">🔄 צפה מחדש</button>
+    <button onclick="closePlayer()" style="background:rgba(255,255,255,0.1);color:white;border:1px solid rgba(255,255,255,0.2);padding:0.6rem 1.2rem;border-radius:10px;font-family:'Outfit',sans-serif;font-size:0.82rem;cursor:pointer">✕ סגור</button>
+  </div>
+</div>
+
+<!-- SOURCE MODAL -->
+<div id="srcModal" onclick="if(event.target===this)closeSrcModal()">
+  <div class="src-sheet">
+    <div class="src-handle"></div>
+    <div class="src-title">🔀 בחר מקור צפייה</div>
+    <div id="srcList"></div>
+    <button class="btn-close-src" onclick="closeSrcModal()">סגור</button>
+  </div>
+</div>
+
+<!-- TRAILER MODAL -->
+<div id="trailerModal" onclick="if(event.target===this)closeTrailer()">
+  <div class="trailer-wrap">
+    <button class="trailer-close" onclick="closeTrailer()">✕ סגור טריילר</button>
+    <iframe id="trailerFrame" allowfullscreen></iframe>
+  </div>
+</div>
+
+<!-- DROPDOWN MENU -->
+<div class="drop-menu hidden" id="dropMenu"></div>
+
+<div id="toast"></div>
+
+<script>
+const TMDB_KEY='188a869e1edf45ff689684b7167be046';
+const TMDB='https://api.themoviedb.org/3';
+const IMG='https://image.tmdb.org/t/p/';
+
+const RD_KEY='ZNPWJX7C226KSMAU335DAQYRPMGUDHVYSRYZVSWSD5WD6U7HP2RA';
+
+// Torrentio mirrors - fallback chain
+const TORRENTIO_MIRRORS=[
+  `https://torrentio.strem.fun/realdebrid=${RD_KEY}`,
+  `https://torrentio.elfhosted.com/realdebrid=${RD_KEY}`,
+];
+
+async function fetchTorrentioStreams(type,id,s,e,imdb){
+  for(const mirror of TORRENTIO_MIRRORS){
+    try{
+      const path=type==='tv'
+        ?`/stream/series/${imdb||id}:${s}:${e}.json`
+        :`/stream/movie/${imdb||id}.json`;
+      const r=await fetch(mirror+path);
+      if(!r.ok)continue;
+      const data=await r.json();
+      if(data.streams?.length)return data.streams;
+    }catch(e){continue;}
+  }
+  return [];
+}
+
+const VOD_SOURCES=[
+  {id:'torrentio',name:'Torrentio RD',desc:'Real-Debrid — איכות גבוהה ללא פרסומות',icon:'⚡',badge:'badge-best',
+   movie:(id,imdb)=>`https://torrentio.strem.fun/realdebrid=${RD_KEY}/stream/movie/${imdb||id}.json`,
+   tv:(id,s,e,imdb)=>`https://torrentio.strem.fun/realdebrid=${RD_KEY}/stream/series/${imdb||id}:${s}:${e}.json`,
+   isRD:true},
+  {id:'comet',name:'Comet RD',desc:'Real-Debrid — מהיר ואמין',icon:'☄️',badge:'badge-best',
+   movie:(id,imdb)=>`https://comet.elfhosted.com/${RD_KEY}/stream/movie/${imdb||id}.json`,
+   tv:(id,s,e,imdb)=>`https://comet.elfhosted.com/${RD_KEY}/stream/series/${imdb||id}:${s}:${e}.json`,
+   isRD:true},
+  {id:'mediafusion',name:'MediaFusion RD',desc:'Real-Debrid — מגוון רחב',icon:'🌊',badge:'badge-best',
+   movie:(id,imdb)=>`https://mediafusion.elfhosted.com/stream/movie/${imdb||id}.json`,
+   tv:(id,s,e,imdb)=>`https://mediafusion.elfhosted.com/stream/series/${imdb||id}:${s}:${e}.json`,
+   isRD:true},
+  {id:'hdhub',name:'HDHub RD',desc:'Real-Debrid — HD איכות',icon:'🎯',badge:'badge-best',
+   movie:(id,imdb)=>`https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9/stream/movie/${imdb||id}.json`,
+   tv:(id,s,e,imdb)=>`https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9/stream/series/${imdb||id}:${s}:${e}.json`,
+   isRD:true},
+  {id:'vidsrc2',name:'VidSrc.to',desc:'דילוג מהיר ואמין',icon:'🎬',badge:'badge-alt',
+   movie:(id)=>`https://vidsrc.to/embed/movie/${id}?sub_lang=heb`,
+   tv:(id,s,e)=>`https://vidsrc.to/embed/tv/${id}/${s}/${e}?sub_lang=heb`},
+  {id:'superembed',name:'SuperEmbed',desc:'נגן מהיר',icon:'🎬',badge:'badge-alt',
+   movie:(id,imdb)=>`https://multiembed.mov/?video_id=${id}&tmdb=1&lang=he`,
+   tv:(id,s,e)=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}&lang=he`},
+
+  {id:'2embed',name:'2Embed',desc:'מהיר ואמין',icon:'🚀',badge:'badge-alt',
+   movie:(id)=>`https://www.2embed.cc/embed/${id}`,
+   tv:(id,s,e)=>`https://www.2embed.cc/embedtv/${id}&s=${s}&e=${e}`},
+  {id:'vidsrcxyz',name:'VidSrc.xyz',desc:'מקור נוסף',icon:'🎯',badge:'badge-alt',
+   movie:(id)=>`https://vidsrc.xyz/embed/movie?tmdb=${id}`,
+   tv:(id,s,e)=>`https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}`},
+  {id:'embedsu',name:'Embed.su',desc:'נקי יחסית',icon:'✨',badge:'badge-alt',
+   movie:(id)=>`https://embed.su/embed/movie/${id}`,
+   tv:(id,s,e)=>`https://embed.su/embed/tv/${id}/${s}/${e}`},
+  {id:'moviesapi',name:'MoviesAPI',desc:'מהיר',icon:'🚀',badge:'badge-alt',
+   movie:(id)=>`https://moviesapi.club/movie/${id}`,
+   tv:(id,s,e)=>`https://moviesapi.club/tv/${id}-${s}-${e}`},
+  {id:'autoembed',name:'AutoEmbed',desc:'אוטומטי',icon:'🤖',badge:'badge-alt',
+   movie:(id)=>`https://autoembed.co/movie/tmdb/${id}`,
+   tv:(id,s,e)=>`https://autoembed.co/tv/tmdb/${id}-${s}-${e}`},
+  {id:'smashy',name:'SmashyStream',desc:'מהיר ואמין',icon:'💥',badge:'badge-alt',
+   movie:(id)=>`https://player.smashy.stream/movie/${id}`,
+   tv:(id,s,e)=>`https://player.smashy.stream/tv/${id}?s=${s}&e=${e}`},
+  {id:'videasy',name:'Videasy',desc:'נגן נקי',icon:'🎬',badge:'badge-alt',
+   movie:(id)=>`https://player.videasy.net/movie/${id}`,
+   tv:(id,s,e)=>`https://player.videasy.net/tv/${id}/${s}/${e}`},
+  {id:'vidsrc',name:'VidSrc.me',desc:'קלאסי',icon:'📡',badge:'badge-alt',
+   movie:(id)=>`https://vidsrc.me/embed/movie?tmdb=${id}&ds_lang=he`,
+   tv:(id,s,e)=>`https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}&ds_lang=he`},
+];
+
+const MOVIE_GENRES=[
+  {id:'',name:'🌟 הכל'},{id:28,name:'💥 אקשן'},{id:35,name:'😂 קומדיה'},
+  {id:18,name:'🎭 דרמה'},{id:27,name:'👻 אימה'},{id:878,name:'🚀 מדע בדיוני'},
+  {id:10749,name:'💕 רומנטי'},{id:53,name:'🔪 מותחן'},{id:16,name:'🎨 אנימציה'},
+  {id:12,name:'🗺 הרפתקאות'},{id:80,name:'🔫 פשע'},{id:99,name:'📽 תיעודי'},
+  {id:14,name:'🧙 פנטזיה'},{id:36,name:'📜 היסטוריה'},{id:10751,name:'👨‍👩‍👧 משפחה'},
+  {id:10402,name:'🎵 מוזיקה'},{id:9648,name:'🔍 מסתורין'},{id:10752,name:'⚔️ מלחמה'},
+  {id:37,name:'🤠 מערבון'},{id:10770,name:'📺 טלוויזיה'},{id:2,name:'🧚 ילדים'},
+];
+
+const TV_GENRES=[
+  {id:'',name:'🌟 הכל'},{id:18,name:'🎭 דרמה'},{id:35,name:'😂 קומדיה'},
+  {id:10765,name:'🚀 מדע בדיוני'},{id:80,name:'🔫 פשע'},{id:10759,name:'💥 אקשן'},
+  {id:16,name:'🎨 אנימציה'},{id:10751,name:'👨‍👩‍👧 משפחה'},{id:99,name:'📽 תיעודי'},
+  {id:10762,name:'🧒 ילדים'},{id:9648,name:'🔍 מסתורין'},{id:10763,name:'📰 חדשות'},
+  {id:10764,name:'🏆 ריאליטי'},{id:10766,name:'🧼 סבון'},{id:10767,name:'💬 אירוח'},
+  {id:10768,name:'⚔️ מלחמה'},{id:37,name:'🤠 מערבון'},{id:10402,name:'🎵 מוזיקה'},
+];
+
+const SORT_OPTIONS=[
+  {id:'popularity.desc',name:'פופולריים'},
+  {id:'vote_average.desc',name:'מדורגים'},
+  {id:'release_date.desc',name:'חדשים'},
+  {id:'revenue.desc',name:'הכנסות'},
+];
+
+const YEARS=['',...Array.from({length:37},(_,i)=>String(new Date().getFullYear()-i))];
+
+const DEFAULT_ADDONS=[
+  {id:1,name:'OpenSubtitles Pro',url:'https://opensubtitlesv3-pro.dexter21767.com/eyJsYW5ncyI6WyJoZWJyZXciXSwic291cmNlIjoidHJ1c3RlZCIsImFpVHJhbnNsYXRlZCI6dHJ1ZSwiYXV0b0FkanVzdG1lbnQiOmZhbHNlfQ==/manifest.json',icon:'💬',type:'stremio',active:true},
+  {id:2,name:'SubSource',url:'https://subsource.strem.top/manifest.json',icon:'💬',type:'stremio',active:true},
+  {id:3,name:'SubDL',url:'https://subdl.strem.top/manifest.json',icon:'📝',type:'stremio',active:true},
+  {id:4,name:'SubSense',url:'https://subsense.nepiraw.com/manifest.json',icon:'🔤',type:'stremio',active:true},
+  {id:5,name:'GTSubs',url:'https://gtsubs.strem.top/manifest.json',icon:'💬',type:'stremio',active:true},
+  {id:6,name:'Subtito',url:'https://subtito.com/manifest.json',icon:'📄',type:'stremio',active:true},
+  {id:7,name:'Toast Translator',url:'https://toast-translator.elfhosted.com/manifest.json',icon:'🔤',type:'stremio',active:true},
+  {id:8,name:'Torrentio',url:'https://torrentio.strem.fun/manifest.json',icon:'⚡',type:'stremio',active:true},
+  {id:9,name:'Torrentio ElfHosted',url:'https://torrentio.elfhosted.com/manifest.json',icon:'⚡',type:'stremio',active:true},
+  {id:10,name:'ThePirateBay+',url:'https://thepiratebay-plus.strem.fun/manifest.json',icon:'🏴',type:'stremio',active:true},
+  {id:11,name:'ThePirateBay CTL',url:'https://5db836ec3ef8-thepiratebay-ctl.baby-beamup.club/manifest.json',icon:'🏴',type:'stremio',active:true},
+  {id:12,name:'Comet',url:'https://comet.elfhosted.com/manifest.json',icon:'☄️',type:'stremio',active:true},
+  {id:13,name:'MediaFusion',url:'https://mediafusion.elfhosted.com/manifest.json',icon:'🌊',type:'stremio',active:true},
+  {id:14,name:'FrostStream',url:'https://froststream.cloutteam.com/manifest.json',icon:'❄️',type:'stremio',active:true},
+  {id:15,name:'Jackettio',url:'https://jackettio.elfhosted.com/manifest.json',icon:'🔍',type:'stremio',active:true},
+  {id:16,name:'Peerflix',url:'https://peerflix.mov/manifest.json',icon:'🎬',type:'stremio',active:true},
+  {id:17,name:'Leviathan',url:'https://leviathanaddon.dpdns.org/manifest.json',icon:'🐋',type:'stremio',active:true},
+  {id:18,name:'HDHub',url:'https://hdhub.thevolecitor.qzz.io/eyJ0b3Jib3giOiJ1bnNldCIsInF1YWxpdGllcyI6IjIxNjBwLDEwODBwLDcyMHAiLCJzb3J0IjoiZGVzYyJ9/manifest.json',icon:'🎯',type:'stremio',active:true},
+  {id:19,name:'Orion',url:'https://5a0d1888fa64-orion.baby-beamup.club/manifest.json',icon:'🌟',type:'stremio',active:true},
+  {id:20,name:'CDFlix',url:'https://cdflix.cdteam.xyz/manifest.json',icon:'📀',type:'stremio',active:true},
+  {id:21,name:'StremThru',url:'https://stremthru.13377001.xyz/stremio/torz/manifest.json',icon:'🔗',type:'stremio',active:true},
+  {id:22,name:'Debrid Search',url:'https://68d69db7dc40-debrid-search.baby-beamup.club/manifest.json',icon:'🔎',type:'stremio',active:true},
+  {id:23,name:'NebulaStreams',url:'https://nebulastreams.onrender.com/manifest.json',icon:'🌌',type:'stremio',active:true},
+  {id:24,name:'AIO',url:'https://aio.pantelx.com/manifest.json',icon:'📦',type:'stremio',active:true},
+  {id:25,name:'TStrm',url:'https://tstrm.org/manifest.json',icon:'📡',type:'stremio',active:true},
+  {id:26,name:'CineTorrent',url:'https://150203dd784e-cinetorrent-addon.baby-beamup.club/manifest.json',icon:'🎞',type:'stremio',active:true},
+  {id:27,name:'YaStream',url:'https://yastream.tamthai.de/manifest.json',icon:'▶️',type:'stremio',active:true},
+  {id:28,name:'FenixFlix',url:'https://fenixflix-ur9u.onrender.com/manifest.json',icon:'🦅',type:'stremio',active:true},
+  {id:29,name:'IntellDebrid',url:'https://intell-debridsearch.nepiraw.com/manifest.json',icon:'🧠',type:'stremio',active:true},
+  {id:30,name:'SeedSphere',url:'https://seedsphere.fly.dev/manifest.json',icon:'🌐',type:'stremio',active:true},
+  {id:31,name:'VidFast',url:'https://vidfast-stremio-addon.zmoualhi.workers.dev/manifest.json',icon:'⚡',type:'stremio',active:true},
+  {id:32,name:'FlixNest Streams',url:'https://flixnest.app/flix-streams/manifest.json',icon:'🎬',type:'stremio',active:true},
+  {id:33,name:'AutoStream',url:'https://autostreamtest.onrender.com/manifest.json',icon:'🤖',type:'stremio',active:true},
+  {id:34,name:'Streailer',url:'https://streailer.elfhosted.com/manifest.json',icon:'🎯',type:'stremio',active:true},
+  {id:35,name:'Corsaro',url:'https://corsaro.stremio.dpdns.org/manifest.json',icon:'🏴',type:'stremio',active:true},
+  {id:36,name:'Brazuca Torrents',url:'https://94c8cb9f702d-brazuca-torrents.baby-beamup.club/manifest.json',icon:'🇧🇷',type:'stremio',active:true},
+  {id:37,name:'NoTorrent2',url:'https://addon.notorrent2.workers.dev/manifest.json',icon:'🎬',type:'stremio',active:true},
+  {id:38,name:'Marvel Addon',url:'https://addon-marvel.onrender.com/manifest.json',icon:'🦸',type:'stremio',active:true},
+  {id:39,name:'Star Wars Addon',url:'https://addon-star-wars-u9e3.onrender.com/manifest.json',icon:'⚔️',type:'stremio',active:true},
+  {id:40,name:'TKTV Status',url:'https://p01--status--sdfgdgfsgdfs--s2qq-tktv.code.run/manifest.json',icon:'📡',type:'stremio',active:true},
+  {id:41,name:'Meteor Anime',url:'https://meteorfortheweebs.midnightignite.me/stremio/manifest.json',icon:'🌙',type:'stremio',active:true},
+  {id:42,name:'WebStream',url:'https://87d6a6ef6b58-webstreamrmbg.baby-beamup.club/manifest.json',icon:'🌐',type:'stremio',active:true},
+  {id:43,name:'Kids ES',url:'https://apps.soluserv.es/kids-es/manifest.json',icon:'🧒',type:'stremio',active:true},
+  {id:44,name:'Top Streaming',url:'https://top-streaming.stream/username=temporary_username/manifest.json',icon:'📺',type:'stremio',active:true},
+  {id:45,name:'TorrentsDB',url:'https://torrentsdb.com/manifest.json',icon:'💾',type:'stremio',active:true},
+  {id:46,name:'Letterboxd',url:'https://letterboxd.almosteffective.com/manifest.json',icon:'📋',type:'stremio',active:true},
+  {id:47,name:'More Like This',url:'https://bbab4a35b833-more-like-this.baby-beamup.club/manifest.json',icon:'🔍',type:'stremio',active:true},
+  {id:48,name:'Watch Next',url:'https://099757617587-watch-next.baby-beamup.club/manifest.json',icon:'▶️',type:'stremio',active:true},
+  {id:49,name:'Ratings Addon',url:'https://72059fbbd1e5-stremio-addon-ratings.baby-beamup.club/manifest.json',icon:'⭐',type:'stremio',active:true},
+  {id:50,name:'Rating Aggregator',url:'https://rating-aggregator.elfhosted.com/manifest.json',icon:'📊',type:'stremio',active:true},
+  {id:51,name:'MyTrakt',url:'https://mytrakt.elfhosted.com/manifest.json',icon:'📝',type:'stremio',active:true},
+  {id:52,name:'Israel TV',url:'https://stremio-addons.com/israel-tv-for-stremio.html',icon:'🇮🇱',type:'stremio',active:true},
+  {id:53,name:'YouTubio',url:'https://youtubio.elfhosted.com/%7B%7D/manifest.json',icon:'▶️',type:'stremio',active:true},
+  {id:54,name:'KangarooStreams',url:'https://kangaroostreams.hayd.uk/Brisbane/radio/ausports/nz/nzradio/nzsports/uktv/uksports/ustv/ussports/catv/casports/eusports/worldsports/epl/extras/exgrp-ca-dazn/exgrp-int-netflix-events/exgrp-int-dirtvision/exgrp-uk-epl/exgrp-uk-dazn/exgrp-au-kayo-sports/exgrp-uk-tnt-sports/exgrp-uk-sky-sports/exgrp-nz-sky-sport/exgrp-int-f1-tv/exgrp-uk-spfl/exgrp-int-rugby-events/exgrp-au-stan-sports-events/exgrp-ppv-events/manifest.json',icon:'🦘',type:'stremio',active:true},
+];
+
+// STATE
+let currentHeroItem=null,heroItems=[],currentHeroIdx=0,heroTimer;
+let currentDetail=null,currentSeason=1,currentSourceIdx=0;
+let currentVODItem=null,currentEpisode={s:1,e:1};
+let searchFilter='all',searchTimer;
+let hlsInst=null,isLive=false,barTimer;
+let activeMovieGenre='',activeTVGenre='';
+let activeMovieSort='popularity.desc',activeTVSort='popularity.desc';
+let activeMovieYear='',activeTVYear='';
+let moviesPage=1,seriesPage=1,moviesLoading=false,seriesLoading=false;
+let selectedAddonType='stremio';
+let addons=JSON.parse(localStorage.getItem('sf_addons')||'null')||DEFAULT_ADDONS;
+let watchlist=JSON.parse(localStorage.getItem('sf_watchlist')||'[]');
+let history_=JSON.parse(localStorage.getItem('sf_history')||'[]');
+
+// NAV
+const PAGE_ORDER=['home','movies','search','series','profile','watchlist','profiles','continue','addons'];
+
+function goPage(pg, isBack=false){
+  const allPages=document.querySelectorAll('.page');
+  const currentActive=document.querySelector('.page.active');
+  const currentPg=currentActive?.id?.replace('pg-','');
+
+  allPages.forEach(p=>{p.classList.remove('active');p.style.animation='';});
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+
+  const p=document.getElementById('pg-'+pg);
+  const b=document.getElementById('bn-'+pg);
+  if(b)b.classList.add('active');
+
+  if(p){
+    const fromIdx=PAGE_ORDER.indexOf(currentPg||'home');
+    const toIdx=PAGE_ORDER.indexOf(pg);
+    let anim='pageIn .28s cubic-bezier(0.34,1.2,0.64,1) both';
+    if(!isBack&&toIdx>fromIdx)anim='slideLeft .28s cubic-bezier(0.34,1.2,0.64,1) both';
+    else if(isBack||toIdx<fromIdx)anim='slideRight .28s cubic-bezier(0.34,1.2,0.64,1) both';
+    p.classList.add('active');
+    p.style.animation=anim;
+    setTimeout(()=>{if(p)p.style.animation='';},300);
+  }
+
+  updateNavIndicator(pg);
+  if(!isBack&&pg!==pageHistory[pageHistory.length-1]){
+    pageHistory.push(pg);
+    if(pageHistory.length>10)pageHistory.shift();
+  }
+
+  haptic('light');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(pg==='movies')initMoviesPage();
+  if(pg==='series')initSeriesPage();
+  if(pg==='addons'){renderAddonList();}
+  if(pg==='watchlist')renderWatchlist();
+  if(pg==='profile')renderProfile();
+  if(pg==='profiles')renderProfiles();
+  if(pg==='continue')renderContinue();
+  if(pg==='search')renderSearchHistory();
+}
+
+// TMDB
+async function tmdb(ep,params={}){
+  const url=new URL(TMDB+ep);
+  url.searchParams.set('api_key',TMDB_KEY);
+  url.searchParams.set('language','he');
+  Object.entries(params).forEach(([k,v])=>url.searchParams.set(k,v));
+  const r=await fetch(url);
+  return r.json();
+}
+
+// HERO
+async function initHero(){
+  const data=await tmdb('/trending/all/week');
+  heroItems=data.results.filter(i=>i.backdrop_path).slice(0,6);
+  document.getElementById('heroDots').innerHTML=heroItems.map((_,i)=>`<div class="hdot${i===0?' active':''}" onclick="setHero(${i})"></div>`).join('');
+  setHero(0);
+  heroTimer=setInterval(()=>setHero((currentHeroIdx+1)%heroItems.length),6000);
+}
+
+function setHero(i){
+  currentHeroIdx=i;const item=heroItems[i];currentHeroItem=item;
+  document.getElementById('heroTitle').textContent=item.title||item.name||'';
+  const bg=document.getElementById('heroBg');
+  bg.src=IMG+'w780'+item.backdrop_path;bg.style.display='block';
+  const year=(item.release_date||item.first_air_date||'').slice(0,4);
+  document.getElementById('heroTags').innerHTML=`
+    <span class="htag ht-blue">${item.media_type==='tv'?'סדרה':'סרט'}</span>
+    ${item.vote_average?`<span class="htag ht-gold">⭐ ${item.vote_average.toFixed(1)}</span>`:''}
+    ${year?`<span class="htag ht-green">${year}</span>`:''}
+  `;
+  document.querySelectorAll('.hdot').forEach((d,j)=>d.classList.toggle('active',j===i));
+}
+
+// CARDS
+// ═══ SPLASH SCREEN ═══
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('splashScreen').classList.add('hide');
+    setTimeout(()=>{
+      const s=document.getElementById('splashScreen');
+      if(s)s.remove();
+    },600);
+  },1800);
+});
+
+// ═══ SEARCH SUGGESTIONS ═══
+let suggestTimer=null;
+
+async function showSuggestions(q){
+  if(!q||q.length<2){hideSuggestions();return;}
+  clearTimeout(suggestTimer);
+  suggestTimer=setTimeout(async()=>{
+    const [movies,shows]=await Promise.all([
+      tmdb('/search/movie',{query:q}),
+      tmdb('/search/tv',{query:q})
+    ]);
+    const results=[
+      ...(movies.results||[]).slice(0,3).map(i=>({...i,media_type:'movie'})),
+      ...(shows.results||[]).slice(0,2).map(i=>({...i,media_type:'tv'}))
+    ].sort((a,b)=>(b.popularity||0)-(a.popularity||0)).slice(0,5);
+
+    const el=document.getElementById('searchSuggestions');
+    if(!results.length){hideSuggestions();return;}
+    el.innerHTML=results.map(r=>{
+      const poster=r.poster_path?IMG+'w92'+r.poster_path:'';
+      const title=r.title||r.name||'';
+      const year=(r.release_date||r.first_air_date||'').slice(0,4);
+      const key=cacheItem(r);
+      return `<div class="suggestion-item" onclick="hideSuggestions();openDetailByKey('${key}')">
+        ${poster?`<img class="suggestion-poster" src="${poster}" onerror="this.style.display='none'">`:'<div class="suggestion-poster"></div>'}
+        <div class="suggestion-info">
+          <div class="suggestion-title">${title}</div>
+          <div class="suggestion-year">${r.media_type==='tv'?'סדרה':'סרט'} ${year?'· '+year:''}</div>
+        </div>
+      </div>`;
+    }).join('');
+    el.classList.add('show');
+  },300);
+}
+
+function hideSuggestions(){
+  document.getElementById('searchSuggestions').classList.remove('show');
+}
+
+// ═══ HOVER PREVIEW ═══
+function makeTCard(item){
+  const poster=item.poster_path?IMG+'w342'+item.poster_path:'';
+  const title=item.title||item.name||'';
+  const year=(item.release_date||item.first_air_date||'').slice(0,4);
+  const rating=item.vote_average?item.vote_average.toFixed(1):'';
+  const key=cacheItem(item);
+  const imgHtml=poster?'<img src="'+poster+'" loading="lazy" onerror="this.style.display=\'none\'">':'';
+  const ratingHtml=rating?'<div class="tcard-rating">⭐ '+rating+'</div>':'';
+  const overview=item.overview?item.overview.slice(0,100)+'...':'';
+  const typeLabel=item.media_type==='tv'?'סדרה':'סרט';
+  return `<div class="tcard" data-id="${item.id}" data-type="${item.media_type}" onclick="openDetailByKey('${key}')">
+    <div class="tcard-poster">${imgHtml}<div class="tcard-ph">🎬</div>${ratingHtml}</div>
+    <div class="tcard-info"><div class="tcard-title">${title}</div><div class="tcard-year">${year}</div></div>
+    <div class="hover-preview">
+      <div class="hp-title">${title}</div>
+      <div class="hp-meta">${typeLabel} ${year?'· '+year:''} ${rating?'· ⭐'+rating:''}</div>
+      ${overview?`<div class="hp-desc">${overview}</div>`:''}
+      <button class="hp-play" onclick="event.stopPropagation();openDetailByKey('${key}')">▶ צפה עכשיו</button>
+    </div>
+  </div>`;
+}
+
+const itemCache={};
+
+function cacheItem(item){
+  if(!item.media_type){
+    item.media_type=item.first_air_date?'tv':'movie';
+  }
+  const key=item.media_type+'_'+item.id;
+  itemCache[key]=item;
+  return key;
+}
+
+async function openDetailByKey(key){
+  // First try cache
+  const item=itemCache[key];
+  if(item){openDetail(item);return;}
+  
+  // Cache miss — extract id and type from key
+  const parts=key.split('_');
+  if(parts.length>=2){
+    const type=parts[0];
+    const id=parts[1];
+    // Show loading immediately
+    showLoadingMsg(true);
+    try{
+      const data=await tmdb('/'+type+'/'+id);
+      showLoadingMsg(false);
+      const fullItem={...data,media_type:type};
+      cacheItem(fullItem);
+      openDetail(fullItem);
+    }catch(e){
+      showLoadingMsg(false);
+      toast('❌ שגיאה בטעינת פרטים');
+    }
+  }
+}
+
+async function openDetailById(id,type){
+  try{
+    const data=await tmdb('/'+type+'/'+id);
+    openDetail({...data,media_type:type});
+  }catch(e){toast('❌ שגיאה');}
+}
+
+
+function makeGridCard(item){
+  const poster=item.poster_path?IMG+'w342'+item.poster_path:'';
+  const title=item.title||item.name||'';
+  const year=(item.release_date||item.first_air_date||'').slice(0,4);
+  const rating=item.vote_average?item.vote_average.toFixed(1):'';
+  const key=cacheItem(item);
+  const imgHtml2=poster?'<img src="'+poster+'" loading="lazy" onerror="this.style.display=\'none\'">':'';
+  const ratingHtml2=rating?'<div class="grid-rating">⭐ '+rating+'</div>':'';
+  return `<div class="grid-card" onclick="openDetailByKey('${key}')">
+    <div class="grid-poster">${imgHtml2}<div class="grid-ph">🎬</div>${ratingHtml2}</div>
+    <div class="grid-info"><div class="grid-title">${title}</div><div class="grid-year">${year}</div></div>
+  </div>`;
+}
+
+async function loadCarousel(ep,elId,params={}){
+  const data=await tmdb(ep,params);
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const type=ep.includes('/movie/')?'movie':ep.includes('/tv/')?'tv':null;
+  el.innerHTML=(data.results||[]).slice(0,20).map(i=>{
+    if(type&&!i.media_type)i={...i,media_type:type};
+    return makeTCard(i);
+  }).join('');
+}
+
+// DROPDOWN SYSTEM
+let currentDrop=null;
+
+function openDrop(type, btn){
+  const menu=document.getElementById('dropMenu');
+  if(currentDrop===type){closeDrop();return;}
+  currentDrop=type;
+  btn.classList.add('open');
+  const rect=btn.getBoundingClientRect();
+  menu.classList.remove('hidden');
+  menu.style.top=(rect.bottom+6)+'px';
+  menu.style.right=(window.innerWidth-rect.right)+'px';
+  menu.style.left='auto';
+
+  let opts=[];
+  if(type==='movieGenre') opts=MOVIE_GENRES.map(g=>({id:g.id,name:g.name,active:g.id===activeMovieGenre,cb:`setMovieGenre(${JSON.stringify(g.id)})`}));
+  if(type==='movieSort') opts=SORT_OPTIONS.map(s=>({id:s.id,name:s.name,active:s.id===activeMovieSort,cb:`setMovieSort('${s.id}')`}));
+  if(type==='movieYear') opts=YEARS.map(y=>({id:y,name:y||'כל השנים',active:y===activeMovieYear,cb:`setMovieYear('${y}')`}));
+  if(type==='seriesGenre') opts=TV_GENRES.map(g=>({id:g.id,name:g.name,active:g.id===activeTVGenre,cb:`setSeriesGenre(${JSON.stringify(g.id)})`}));
+  if(type==='seriesSort') opts=SORT_OPTIONS.map(s=>({id:s.id,name:s.name,active:s.id===activeTVSort,cb:`setSeriesSort('${s.id}')`}));
+  if(type==='seriesYear') opts=YEARS.map(y=>({id:y,name:y||'כל השנים',active:y===activeTVYear,cb:`setSeriesYear('${y}')`}));
+
+  menu.innerHTML=opts.map(o=>`
+    <div class="drop-opt${o.active?' active':''}" onclick="${o.cb};closeDrop()">
+      ${o.name}${o.active?'<span class="check">✓</span>':''}
+    </div>`).join('');
+}
+
+function closeDrop(){
+  document.getElementById('dropMenu').classList.add('hidden');
+  document.querySelectorAll('.drop-btn').forEach(b=>b.classList.remove('open'));
+  currentDrop=null;
+}
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.drop-btn')&&!e.target.closest('.drop-menu'))closeDrop();
+});
+
+function updateDropBtns(page){
+  if(page==='movies'){
+    const gLabel=MOVIE_GENRES.find(g=>g.id===activeMovieGenre)?.name||'🎭 ז\'אנר';
+    const sLabel=SORT_OPTIONS.find(s=>s.id===activeMovieSort)?.name||'📊 מיון';
+    const yLabel=activeMovieYear||'📅 שנה';
+    const gb=document.getElementById('movieGenreBtn');
+    const sb=document.getElementById('movieSortBtn');
+    const yb=document.getElementById('movieYearBtn');
+    if(gb)gb.innerHTML=`${gLabel} <span class="arr">▾</span>`;
+    if(sb)sb.innerHTML=`📊 ${sLabel} <span class="arr">▾</span>`;
+    if(yb)yb.innerHTML=`📅 ${yLabel} <span class="arr">▾</span>`;
+    if(activeMovieGenre)gb?.classList.add('selected');else gb?.classList.remove('selected');
+    if(activeMovieYear)yb?.classList.add('selected');else yb?.classList.remove('selected');
+  } else {
+    const gLabel=TV_GENRES.find(g=>g.id===activeTVGenre)?.name||'🎭 ז\'אנר';
+    const sLabel=SORT_OPTIONS.find(s=>s.id===activeTVSort)?.name||'📊 מיון';
+    const yLabel=activeTVYear||'📅 שנה';
+    const gb=document.getElementById('seriesGenreBtn');
+    const sb=document.getElementById('seriesSortBtn');
+    const yb=document.getElementById('seriesYearBtn');
+    if(gb)gb.innerHTML=`${gLabel} <span class="arr">▾</span>`;
+    if(sb)sb.innerHTML=`📊 ${sLabel} <span class="arr">▾</span>`;
+    if(yb)yb.innerHTML=`📅 ${yLabel} <span class="arr">▾</span>`;
+    if(activeTVGenre)gb?.classList.add('selected');else gb?.classList.remove('selected');
+    if(activeTVYear)yb?.classList.add('selected');else yb?.classList.remove('selected');
+  }
+}
+
+// MOVIES PAGE
+function initMoviesPage(){
+  moviesPage=1;
+  updateDropBtns('movies');
+  loadMoviesGrid(true);
+}
+
+function setMovieGenre(id){activeMovieGenre=id;moviesPage=1;updateDropBtns('movies');loadMoviesGrid(true);}
+function setMovieSort(s){activeMovieSort=s;moviesPage=1;updateDropBtns('movies');loadMoviesGrid(true);}
+function setMovieYear(y){activeMovieYear=y;moviesPage=1;updateDropBtns('movies');loadMoviesGrid(true);}
+
+async function loadMoviesGrid(reset=false){
+  if(moviesLoading)return;
+  moviesLoading=true;
+  const params={sort_by:activeMovieSort,page:moviesPage};
+  if(activeMovieGenre)params.with_genres=activeMovieGenre;
+  if(activeMovieYear)params.primary_release_year=activeMovieYear;
+  const data=await tmdb('/discover/movie',params);
+  const items=(data.results||[]).map(i=>({...i,media_type:'movie'}));
+  const grid=document.getElementById('moviesGrid');
+  const total=data.total_results||0;
+  document.getElementById('moviesCount').textContent=`${total.toLocaleString()} סרטים`;
+  if(reset) grid.innerHTML='';
+  grid.innerHTML+=items.map(makeGridCard).join('');
+  // Load more button
+  const existingBtn=grid.querySelector('.load-more-btn');
+  if(existingBtn)existingBtn.remove();
+  if(moviesPage<(data.total_pages||1)&&moviesPage<10){
+    grid.innerHTML+=`<button class="load-more-btn" onclick="loadMoreMovies()">טען עוד סרטים ▼</button>`;
+  }
+  moviesLoading=false;
+}
+
+function loadMoreMovies(){moviesPage++;loadMoviesGrid();}
+
+// SERIES PAGE
+function initSeriesPage(){
+  seriesPage=1;
+  updateDropBtns('series');
+  loadSeriesGrid(true);
+}
+
+function setSeriesGenre(id){activeTVGenre=id;seriesPage=1;updateDropBtns('series');loadSeriesGrid(true);}
+function setSeriesSort(s){activeTVSort=s;seriesPage=1;updateDropBtns('series');loadSeriesGrid(true);}
+function setSeriesYear(y){activeTVYear=y;seriesPage=1;updateDropBtns('series');loadSeriesGrid(true);}
+
+async function loadSeriesGrid(reset=false){
+  if(seriesLoading)return;
+  seriesLoading=true;
+  const params={sort_by:activeTVSort,page:seriesPage};
+  if(activeTVGenre)params.with_genres=activeTVGenre;
+  if(activeTVYear)params.first_air_date_year=activeTVYear;
+  const data=await tmdb('/discover/tv',params);
+  const items=(data.results||[]).map(i=>({...i,media_type:'tv'}));
+  const grid=document.getElementById('seriesGrid');
+  const total=data.total_results||0;
+  document.getElementById('seriesCount').textContent=`${total.toLocaleString()} סדרות`;
+  if(reset)grid.innerHTML='';
+  grid.innerHTML+=items.map(makeGridCard).join('');
+  const existingBtn=grid.querySelector('.load-more-btn');
+  if(existingBtn)existingBtn.remove();
+  if(seriesPage<(data.total_pages||1)&&seriesPage<10){
+    grid.innerHTML+=`<button class="load-more-btn" onclick="loadMoreSeries()">טען עוד סדרות ▼</button>`;
+  }
+  seriesLoading=false;
+}
+
+function loadMoreSeries(){seriesPage++;loadSeriesGrid();}
+
+// SEARCH
+function setFilter(f){
+  searchFilter=f;
+  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('onclick')?.includes("'"+f+"'")));
+  const q=document.getElementById('searchInput').value;
+  if(q)doSearch(q);
+}
+
+function handleSearch(v){
+  clearTimeout(searchTimer);
+  if(!v){document.getElementById('searchGrid').innerHTML='<div class="empty-state" style="grid-column:1/-1"><div class="ei">🔍</div><p>חפש סרט, סדרה, שחקן...</p></div>';return;}
+  searchTimer=setTimeout(()=>doSearch(v),400);
+}
+
+async function doSearch(q){
+  document.getElementById('searchGrid').innerHTML='<div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div>';
+  let results=[];
+  if(searchFilter==='all'||searchFilter==='movie'){
+    const d=await tmdb('/search/movie',{query:q});
+    results=results.concat((d.results||[]).map(i=>({...i,media_type:'movie'})));
+  }
+  if(searchFilter==='all'||searchFilter==='tv'){
+    const d=await tmdb('/search/tv',{query:q});
+    results=results.concat((d.results||[]).map(i=>({...i,media_type:'tv'})));
+  }
+  results.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  document.getElementById('searchGrid').innerHTML=results.length
+    ?results.slice(0,40).map(makeGridCard).join('')
+    :'<div class="empty-state" style="grid-column:1/-1"><div class="ei">🔍</div><p>לא נמצאו תוצאות</p></div>';
+}
+
+async function doAdvSearch(){
+  const actor=document.getElementById('advActor').value.trim();
+  const year=document.getElementById('advYear').value.trim();
+  const lang=document.getElementById('advCountry').value.trim();
+  document.getElementById('searchGrid').innerHTML='<div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-grid-card"><div class="sk-grid-poster skeleton"></div><div style="padding:0.4rem"><div class="sk-line skeleton" style="margin-bottom:0.3rem"></div><div class="sk-line sk-line-short skeleton"></div></div></div>';
+  const params={};
+  if(year)params.year=year;
+  if(lang)params.with_original_language=lang;
+  let results=[];
+  if(actor){
+    const p=await tmdb('/search/person',{query:actor});
+    const pid=(p.results||[])[0]?.id;
+    if(pid){
+      const m=await tmdb('/discover/movie',{with_cast:pid,...params});
+      results=results.concat((m.results||[]).map(i=>({...i,media_type:'movie'})));
+    }
+  } else {
+    const m=await tmdb('/discover/movie',{sort_by:'popularity.desc',...params});
+    results=results.concat((m.results||[]).map(i=>({...i,media_type:'movie'})));
+    const t=await tmdb('/discover/tv',{sort_by:'popularity.desc',...params});
+    results=results.concat((t.results||[]).map(i=>({...i,media_type:'tv'})));
+  }
+  results.sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  document.getElementById('searchGrid').innerHTML=results.length
+    ?results.slice(0,40).map(makeGridCard).join('')
+    :'<div class="empty-state" style="grid-column:1/-1"><div class="ei">🔍</div><p>לא נמצאו תוצאות</p></div>';
+}
+
+// SURPRISE
+async function surpriseMe(){
+  const page=Math.floor(Math.random()*20)+1;
+  const data=await tmdb('/movie/popular',{page});
+  const items=data.results||[];
+  if(!items.length)return;
+  const item=items[Math.floor(Math.random()*items.length)];
+  openDetail({...item,media_type:'movie'});
+}
+
+// DETAIL
+async function openDetail(item){
+  if(typeof item==='string')item=JSON.parse(item);
+  currentDetail=item;
+  const type=item.media_type||(item.first_air_date?'tv':'movie');
+  const details=await tmdb(`/${type}/${item.id}`,{append_to_response:'videos,external_ids,release_dates'});
+  const backdrop=details.backdrop_path?IMG+'w780'+details.backdrop_path:'';
+  const title=details.title||details.name||'';
+  const year=(details.release_date||details.first_air_date||'').slice(0,4);
+  const rating=details.vote_average?details.vote_average.toFixed(1):'';
+  const genres=(details.genres||[]).map(g=>g.name).join(', ');
+  const runtime=details.runtime?(details.runtime+' דק\''):(details.episode_run_time?.[0]?(details.episode_run_time[0]+' דק\''):'');
+
+  const bg=document.getElementById('detailBg');
+  if(backdrop){bg.src=backdrop;bg.style.display='block';}else bg.style.display='none';
+  document.getElementById('detailTitle').textContent=title;
+  document.getElementById('detailDesc').textContent=details.overview||'תיאור לא זמין בעברית';
+  document.getElementById('detailMeta').innerHTML=`
+    <span class="htag ht-blue">${type==='tv'?'סדרה':'סרט'}</span>
+    ${rating?`<span class="htag ht-gold">⭐ ${rating}/10</span>`:''}
+    ${year?`<span class="htag ht-green">${year}</span>`:''}
+    ${runtime?`<span class="htag" style="background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.2)">${runtime}</span>`:''}
+    ${genres?`<span style="font-size:0.62rem;color:var(--muted)">${genres}</span>`:''}
+  `;
+
+  // IMDB + Rotten Tomatoes ratings
+  const imdbId=details.external_ids?.imdb_id||details.imdb_id;
+  const imdbRating=details.vote_average?(details.vote_average/10*100).toFixed(0)+'%':'';
+  const voteCount=details.vote_count?'('+details.vote_count.toLocaleString()+' דירוגים)':'';
+  const score=details.vote_average?details.vote_average.toFixed(1):'';
+  let ratingsHtml='';
+  if(score){
+    const color=parseFloat(score)>=7?'var(--green)':parseFloat(score)>=5?'var(--gold)':'var(--red)';
+    ratingsHtml+='<div class="rating-badge"><span>⭐</span><div><div style="font-size:0.7rem;font-weight:800;color:'+color+'">'+score+'/10</div><div style="font-size:0.55rem;color:var(--muted)">TMDB '+voteCount+'</div></div></div>';
+  }
+  if(imdbId){
+    ratingsHtml+='<div class="rating-badge rb-imdb" style="cursor:pointer" onclick="openImdb(this)" data-imdb="'+imdbId+'"><span style="background:#F5C518;color:#000;padding:0.1rem 0.3rem;border-radius:3px;font-weight:900;font-size:0.65rem">IMDb</span><div style="margin-right:0.35rem"><div class="rb-score">'+(score||'N/A')+'/10</div><div style="font-size:0.55rem;color:var(--muted)">לחץ לפרטים</div></div></div>';
+  }
+  document.getElementById('ratingsRow').innerHTML=ratingsHtml;
+
+  currentDetail={...item,...details,media_type:type};
+  const inWL=watchlist.some(w=>w.id===item.id);
+
+  // Next episode date for TV
+  if(type==='tv'){
+    getNextEpisodeDate(item.id).then(dateStr=>{
+      if(dateStr){
+        const rd=document.createElement('div');
+        rd.className='release-date';
+        rd.textContent=dateStr;
+        document.getElementById('detailDesc').after(rd);
+      }
+    });
+  }
+
+  // Trailer
+  const trailer=(details.videos?.results||[]).find(v=>v.type==='Trailer'&&v.site==='YouTube');
+
+  document.getElementById('detailActions').innerHTML=`
+    <button class="btn-play" onclick="playVOD(currentDetail,0)">▶ צפה עכשיו</button>
+    ${trailer?`<button class="trailer-btn" onclick="openTrailer('${trailer.key}')">🎬 טריילר</button>`:''}
+    <button class="watchlist-btn${inWL?' saved':''}" onclick="toggleWatchlist(currentDetail)" id="wlBtn">${inWL?'🔖 נשמר':'+ שמור'}</button>
+  `;
+
+  document.getElementById('sourceBtns').innerHTML=`
+    <div style="font-size:0.62rem;color:var(--muted);width:100%;margin-bottom:0.25rem">מקור:</div>
+    ${VOD_SOURCES.map((s,i)=>`<button class="src-btn${i===0?' active':''}" onclick="playVOD(currentDetail,${i})">${s.icon} ${s.name}</button>`).join('')}
+  `;
+
+  const epSection=document.getElementById('episodesSection');
+  if(type==='tv'&&details.seasons){
+    epSection.style.display='block';
+    const seasons=details.seasons.filter(s=>s.season_number>0);
+    currentSeason=seasons[0]?.season_number||1;
+    document.getElementById('seasonsStrip').innerHTML=seasons.map(s=>`
+      <div class="season-btn${s.season_number===currentSeason?' active':''}" onclick="loadEps(${item.id},${s.season_number})">${s.name}</div>
+    `).join('');
+    loadEps(item.id,currentSeason);
+  } else epSection.style.display='none';
+
+  // Preload best stream in background
+  if(imdbId){
+    fetchTorrentioStreams(type,item.id,currentSeason,1,imdbId).then(streams=>{
+      if(streams.length>0&&streams[0].url){
+        const v=document.getElementById('mainVideo');
+        if(v.src!==streams[0].url){
+          v.preload='auto';
+          // Store for quick play
+          window._preloadedStream={url:streams[0].url,streams,item,type};
+        }
+      }
+    }).catch(()=>{});
+  }
+  const sim=await tmdb('/'+type+'/'+item.id+'/similar');
+  document.getElementById('similarCarousel').innerHTML=(sim.results||[]).slice(0,12).map(i=>makeGridCard({...i,media_type:type})).join('');
+  document.getElementById('detailOv').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+async function loadEps(sid,season){
+  currentSeason=season;
+  document.querySelectorAll('.season-btn').forEach(b=>b.classList.toggle('active',b.textContent.includes(season)));
+  const data=await tmdb(`/tv/${sid}/season/${season}`);
+  document.getElementById('episodesGrid').innerHTML=(data.episodes||[]).map(ep=>`
+    <div class="ep-item" onclick="playVOD(currentDetail,currentSourceIdx,${season},${ep.episode_number})">
+      <div class="ep-num">${ep.episode_number}</div>
+      <div class="ep-title">${ep.name||'פרק '+ep.episode_number}</div>
+      <div class="ep-play">▶</div>
+    </div>`).join('');
+  
+  // Preload first episode in background
+  if(currentDetail){
+    const imdbId=currentDetail.imdb_id||currentDetail.external_ids?.imdb_id||'';
+    const firstEp=(data.episodes||[])[0];
+    if(firstEp){
+      fetchTorrentioStreams('tv',sid,season,firstEp.episode_number,imdbId).then(streams=>{
+        if(streams.length>0){
+          window._preloadedStream={url:streams[0].url,streams,item:currentDetail,type:'tv',s:season,e:firstEp.episode_number};
+        }
+      }).catch(()=>{});
+    }
+  }
+}
+
+function closeDetail(){document.getElementById('detailOv').classList.remove('open');document.body.style.overflow='';}
+
+// TRAILER
+function openTrailer(key){
+  document.getElementById('trailerFrame').src=`https://www.youtube.com/embed/${key}?autoplay=1`;
+  document.getElementById('trailerModal').classList.add('open');
+}
+function closeTrailer(){
+  document.getElementById('trailerFrame').src='';
+  document.getElementById('trailerModal').classList.remove('open');
+}
+
+// WATCHLIST
+function toggleWatchlist(item){
+  const idx=watchlist.findIndex(w=>w.id===item.id);
+  if(idx>=0){
+    watchlist.splice(idx,1);
+    toast('🗑 הוסר מרשימת הצפייה');
+    document.getElementById('wlBtn').textContent='+ שמור';
+    document.getElementById('wlBtn').classList.remove('saved');
+  } else {
+    watchlist.unshift({id:item.id,title:item.title||item.name,poster:item.poster_path,type:item.media_type,year:(item.release_date||item.first_air_date||'').slice(0,4),addedAt:Date.now()});
+    toast('🔖 נוסף לרשימת הצפייה!');
+    document.getElementById('wlBtn').textContent='🔖 נשמר';
+    document.getElementById('wlBtn').classList.add('saved');
+  }
+  localStorage.setItem('sf_watchlist',JSON.stringify(watchlist));
+}
+
+function renderWatchlist(){
+  const el=document.getElementById('watchlistContent');
+  if(!watchlist.length){el.innerHTML='<div class="empty-state"><div class="ei">🔖</div><p>רשימת הצפייה ריקה.<br>לחץ + שמור בכל סרט.</p></div>';return;}
+  el.innerHTML=watchlist.map(w=>`
+    <div class="wl-item" onclick="openDetailById(${w.id},'${w.type}')">
+      ${w.poster?`<img class="wl-poster" src="${IMG}w92${w.poster}" onerror="this.style.display='none'">`:'<div class="wl-poster" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem">🎬</div>'}
+      <div class="wl-info">
+        <div class="wl-title">${w.title}</div>
+        <div class="wl-meta">${w.type==='tv'?'סדרה':'סרט'} · ${w.year}</div>
+      </div>
+      <button class="wl-del" onclick="event.stopPropagation();removeWatchlist(${w.id})">🗑</button>
+    </div>
+  `).join('');
+}
+
+function removeWatchlist(id){
+  watchlist=watchlist.filter(w=>w.id!==id);
+  localStorage.setItem('sf_watchlist',JSON.stringify(watchlist));
+  renderWatchlist();
+  toast('🗑 הוסר');
+}
+
+// HISTORY
+function addToHistory(item){
+  history_=history_.filter(h=>h.id!==item.id);
+  history_.unshift({id:item.id,title:item.title||item.name,poster:item.poster_path,type:item.media_type,watchedAt:Date.now()});
+  if(history_.length>50)history_=history_.slice(0,50);
+  localStorage.setItem('sf_history',JSON.stringify(history_));
+}
+
+// PROFILE
+function renderProfile(){
+  const totalWatched=history_.length;
+  const movies=history_.filter(h=>h.type==='movie').length;
+  const series=history_.filter(h=>h.type==='tv').length;
+  document.getElementById('statsGrid').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${totalWatched}</div><div class="stat-label">סה"כ נצפו</div></div>
+    <div class="stat-card"><div class="stat-num">${movies}</div><div class="stat-label">סרטים</div></div>
+    <div class="stat-card"><div class="stat-num">${series}</div><div class="stat-label">סדרות</div></div>
+  `;
+  const achievements=[];
+  if(totalWatched>=1)achievements.push({ico:'🎬',name:'צופה ראשון',desc:'צפה בתוכן לראשונה'});
+  if(totalWatched>=10)achievements.push({ico:'🔥',name:'מכור לסרטים',desc:'צפה ב-10 תוכניות'});
+  if(totalWatched>=50)achievements.push({ico:'🏆',name:'מלך הצפייה',desc:'צפה ב-50 תוכניות'});
+  if(watchlist.length>=5)achievements.push({ico:'🔖',name:'מתכנן צפייה',desc:'שמר 5+ תוכניות'});
+  document.getElementById('achievementsList').innerHTML=achievements.length
+    ?achievements.map(a=>`<div class="achievement"><div class="ach-ico">${a.ico}</div><div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div></div>`).join('')
+    :'<div style="font-size:0.75rem;color:var(--muted);padding:0.5rem 0">צפה בתוכן כדי לקבל הישגים!</div>';
+  document.getElementById('historyList').innerHTML=history_.slice(0,10).map(h=>`
+    <div class="wl-item" onclick="openDetailById(${h.id},'${h.type}')">
+      ${h.poster?`<img class="wl-poster" src="${IMG}w92${h.poster}" onerror="this.style.display='none'">`:'<div class="wl-poster" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem">🎬</div>'}
+      <div class="wl-info"><div class="wl-title">${h.title}</div><div class="wl-meta">${h.type==='tv'?'סדרה':'סרט'}</div></div>
+    </div>
+  `).join('')||'<div style="font-size:0.75rem;color:var(--muted);padding:0.5rem 0">אין היסטוריה עדיין</div>';
+}
+
+// PLAYER
+async function playVOD(item,srcIdx,season,episode){
+  if(!item)return;
+  currentVODItem=item;
+  const type=item.media_type||(item.first_air_date?'tv':'movie');
+  const s=season||currentSeason||1;
+  const e=episode||1;
+  currentEpisode={s,e};
+  const imdbId=item.imdb_id||item.external_ids?.imdb_id||'';
+
+  // If specific source requested, use it directly
+  if(srcIdx!==undefined&&srcIdx!==null&&srcIdx!==0){
+    currentSourceIdx=srcIdx;
+    const src=VOD_SOURCES[srcIdx];
+    if(src.isRD){
+      await playWithRD(item,src,type,s,e,imdbId);
+    } else {
+      playWithIframe(item,src,type,s,e,imdbId);
+    }
+    return;
+  }
+
+  // Use preloaded stream if available for faster start
+  if(window._preloadedStream&&
+     window._preloadedStream.item?.id===item.id&&
+     window._preloadedStream.type===type){
+    const {streams}=window._preloadedStream;
+    window._preloadedStream=null;
+    closeDetail();
+    showLoadingMsg(false);
+    openPlayerUI();
+    await playRDStreams(item,streams,type,s,e);
+    addToHistory({...item,media_type:type});
+    return;
+  }
+
+  // Default: Try Torrentio RD first with mirror fallback
+  currentSourceIdx=0;
+  closeDetail();
+  showLoadingMsg(true);
+  openPlayerUI();
+
+  try{
+    const streams=await fetchTorrentioStreams(type,item.id,s,e,imdbId);
+    if(streams.length>0){
+      await playRDStreams(item,streams,type,s,e);
+    } else {
+      showLoadingMsg(false);
+      const fallback=VOD_SOURCES.find(src=>!src.isRD);
+      if(fallback)playWithIframe(item,fallback,type,s,e,imdbId);
+      else toast('❌ לא נמצאו מקורות');
+    }
+  }catch(err){
+    showLoadingMsg(false);
+    const fallback=VOD_SOURCES.find(src=>!src.isRD);
+    if(fallback)playWithIframe(item,fallback,type,s,e,imdbId);
+  }
+  addToHistory({...item,media_type:type});
+}
+
+async function playWithRD(item,src,type,s,e,imdbId){
+  closeDetail();showLoadingMsg(true);openPlayerUI();
+  try{
+    const apiUrl=type==='tv'?src.tv(item.id,s,e,imdbId):src.movie(item.id,imdbId);
+    const resp=await fetch(apiUrl);
+    const data=await resp.json();
+    const streams=data.streams||[];
+    if(!streams.length){showLoadingMsg(false);toast('❌ לא נמצאו קישורים');return;}
+    await playRDStreams(item,streams,type,s,e);
+  }catch(err){showLoadingMsg(false);toast('❌ שגיאה');}
+  addToHistory({...item,media_type:type});
+}
+
+async function playRDStreams(item,streams,type,s,e){
+  const best=streams[0];
+  const streamUrl=best.url;
+  if(!streamUrl){showLoadingMsg(false);toast('❌ שגיאה בקישור');return;}
+
+  const video=document.getElementById('mainVideo');
+  const frame=document.getElementById('playerFrame');
+  if(hlsInst){hlsInst.destroy();hlsInst=null;}
+  frame.src='';frame.style.display='none';
+  video.style.display='block';
+
+  if(streamUrl.includes('.m3u8')&&Hls.isSupported()){
+    hlsInst=new Hls();hlsInst.loadSource(streamUrl);hlsInst.attachMedia(video);
+    hlsInst.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>{});showLoadingMsg(false);});
+    hlsInst.on(Hls.Events.ERROR,(ev,data)=>{if(data.fatal){showLoadingMsg(false);toast('❌ שגיאה בהזרמה');}});
+  } else {
+    video.src=streamUrl;video.play().catch(()=>{});showLoadingMsg(false);
+  }
+
+  document.getElementById('pSrcBtn').style.display='flex';
+  document.getElementById('pSubBtn').style.display='flex';
+  document.getElementById('progressWrap').style.display='block';
+  document.getElementById('pTitle').textContent=(item.title||item.name||'')+(type==='tv'?' — ע'+s+' פ'+e:'');
+
+  // Auto-load Hebrew subtitles
+  setTimeout(()=>autoLoadSubtitles(item),2000);
+
+  // Preload next episode
+  if(type==='tv'){
+    const nextE=e+1;
+    const imdbId=item.imdb_id||item.external_ids?.imdb_id||'';
+    setTimeout(()=>{
+      fetchTorrentioStreams('tv',item.id,s,nextE,imdbId).then(streams=>{
+        if(streams.length>0){
+          window._nextEpStream={streams,item,s,e:nextE};
+          toast('⏭ הפרק הבא מוכן');
+        }
+      }).catch(()=>{});
+    },5000);
+  }
+
+  // Show quality picker
+  if(streams.length>1){
+    setTimeout(()=>{
+      const qualities=streams.slice(0,10).map((st,i)=>{
+        const name=st.name||st.title||('Stream '+(i+1));
+        let badge='',color='var(--muted)';
+        if(name.toLowerCase().includes('2160')||name.toLowerCase().includes('4k')){badge='4K';color='var(--gold)';}
+        else if(name.toLowerCase().includes('1080')){badge='1080p';color='var(--green)';}
+        else if(name.toLowerCase().includes('720')){badge='720p';color='var(--accent)';}
+        return '<div class="src-item'+(i===0?' active':'')+'" onclick="playRDStream(\''+st.url+'\')"><div class="src-item-icon">'+(i===0?'▶️':'🎬')+'</div><div style="flex:1"><div class="src-item-name">'+name.slice(0,40)+'</div></div>'+(badge?'<span style="font-size:0.6rem;font-weight:800;color:'+color+';background:'+color+'22;padding:0.15rem 0.4rem;border-radius:4px">'+badge+'</span>':'')+'</div>';
+      }).join('');
+      document.getElementById('srcList').innerHTML='<div style="font-size:0.72rem;color:var(--text2);margin-bottom:0.6rem;font-weight:700">🎬 בחר איכות</div>'+qualities;
+      document.getElementById('srcModal').classList.add('open');
+    },1000);
+  }
+}
+
+function playWithIframe(item,src,type,s,e,imdbId){
+  const url=type==='tv'?src.tv(item.id,s,e):src.movie(item.id,imdbId);
+  const video=document.getElementById('mainVideo');
+  const frame=document.getElementById('playerFrame');
+  if(hlsInst){hlsInst.destroy();hlsInst=null;}
+  video.pause();video.src='';video.style.display='none';
+  frame.src=url;frame.style.display='block';
+  document.getElementById('pSrcBtn').style.display='flex';
+  document.getElementById('pSubBtn').style.display='none';
+  document.getElementById('progressWrap').style.display='none';
+  document.getElementById('pTitle').textContent=(item.title||item.name||'')+(type==='tv'?' — ע'+s+' פ'+e:'');
+  closeDetail();
+  openPlayerUI();
+  addToHistory({...item,media_type:type});
+}
+
+
+function showLoadingMsg(show){
+  document.getElementById('loadingMsg').style.display=show?'block':'none';
+}
+
+function playRDStream(url){
+  closeSrcModal();
+  const video=document.getElementById('mainVideo');
+  if(hlsInst){hlsInst.destroy();hlsInst=null;}
+  if(url.includes('.m3u8')&&Hls.isSupported()){
+    hlsInst=new Hls();hlsInst.loadSource(url);hlsInst.attachMedia(video);
+    hlsInst.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>{});});
+  } else {
+    video.src=url;video.play().catch(()=>{});
+  }
+}
+
+function openPlayerUI(){
+  document.getElementById('playerOv').classList.add('open');
+  document.body.style.overflow='hidden';
+  showBar();
+}
+
+function closePlayer(e){
+  if(e)e.stopPropagation();
+  const video=document.getElementById('mainVideo');
+  video.pause();video.src='';
+  if(hlsInst){hlsInst.destroy();hlsInst=null;}
+  document.getElementById('playerFrame').src='';
+  document.getElementById('playerOv').classList.remove('open');
+  document.body.style.overflow='';isLive=false;
+}
+
+function togglePlay(e){if(e)e.stopPropagation();if(isLive)return;const v=document.getElementById('mainVideo');if(v.paused){v.play();document.getElementById('ppBtn').textContent='⏸';}else{v.pause();document.getElementById('ppBtn').textContent='▶';}}
+function skipB(e){if(e)e.stopPropagation();if(!isLive)document.getElementById('mainVideo').currentTime-=10;}
+function skipF(e){if(e)e.stopPropagation();if(!isLive)document.getElementById('mainVideo').currentTime+=10;}
+function setVol(el){document.getElementById('mainVideo').volume=el.value/100;el.style.setProperty('--v',el.value+'%');}
+function toggleMute(){const v=document.getElementById('mainVideo'),sl=document.getElementById('volSlider');if(v.muted){v.muted=false;sl.value=100;sl.style.setProperty('--v','100%');document.getElementById('volIcon').textContent='🔊';}else{v.muted=true;sl.style.setProperty('--v','0%');document.getElementById('volIcon').textContent='🔇';}}
+function seekVid(e){
+  if(isLive)return;
+  e.stopPropagation();
+  const v=document.getElementById('mainVideo');
+  if(!v.duration)return;
+  const r=e.currentTarget.getBoundingClientRect();
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  v.currentTime=Math.max(0,Math.min(v.duration,((clientX-r.left)/r.width)*v.duration));
+}
+
+function initProgressTouch(){
+  const pw=document.getElementById('progressWrap');
+  if(!pw)return;
+  let dragging=false;
+
+  let seekTimer=null;
+
+  function updateFromTouch(e){
+    const v=document.getElementById('mainVideo');
+    if(!v||!v.duration)return;
+    const r=pw.getBoundingClientRect();
+    const clientX=e.touches?e.touches[0].clientX:e.clientX;
+    const x=Math.max(0,Math.min(r.width,clientX-r.left));
+    const pct=x/r.width;
+    const newTime=pct*v.duration;
+    
+    // Update UI instantly
+    document.getElementById('progressBar').style.width=(pct*100)+'%';
+    document.getElementById('progressWrap').style.setProperty('--p',(pct*100)+'%');
+    document.getElementById('timeDisplay').textContent=fmt(newTime)+' / '+fmt(v.duration);
+    
+    // Show tooltip
+    const tip=document.getElementById('timeTooltip');
+    if(tip){tip.textContent=fmt(newTime);tip.style.left=x+'px';tip.style.display='block';}
+    
+    // Debounce the actual seek for performance
+    clearTimeout(seekTimer);
+    seekTimer=setTimeout(()=>{
+      v.currentTime=newTime;
+    },150);
+  }
+
+  function finishSeek(){
+    dragging=false;
+    clearTimeout(seekTimer);
+    const v=document.getElementById('mainVideo');
+    const tip=document.getElementById('timeTooltip');
+    if(tip)tip.style.display='none';
+    if(!v||!v.duration)return;
+    
+    const newTime=parseFloat(document.getElementById('progressBar').style.width)/100*v.duration;
+    
+    // Fastest possible seek: reload with #t= time fragment
+    const src=v.src;
+    if(src&&src.startsWith('http')){
+      showBuffer();
+      document.getElementById('bufferText').textContent='מעביר זמן...';
+      const baseSrc=src.replace(/#t=[\d.]+/,'');
+      v.src=baseSrc+'#t='+Math.floor(newTime);
+      v.load();
+      v.addEventListener('canplay',()=>{v.play().catch(()=>{});},{once:true});
+    } else {
+      v.currentTime=newTime;
+      v.play().catch(()=>{});
+    }
+  }
+
+  pw.addEventListener('mousedown',e=>{dragging=true;updateFromTouch(e);},{passive:true});
+  document.addEventListener('mousemove',e=>{if(dragging)updateFromTouch(e);});
+  document.addEventListener('mouseup',()=>{if(dragging)finishSeek();});
+  pw.addEventListener('touchstart',e=>{dragging=true;updateFromTouch(e);e.stopPropagation();},{passive:false});
+  pw.addEventListener('touchmove',e=>{if(dragging){updateFromTouch(e);e.preventDefault();}},{passive:false});
+  pw.addEventListener('touchend',()=>{if(dragging)finishSeek();});
+  pw.addEventListener('click',e=>{updateFromTouch(e);setTimeout(()=>{const v=document.getElementById('mainVideo');if(v&&v.paused)v.play().catch(()=>{});},200);});
+}
+function toggleFS(e){
+  if(e)e.stopPropagation();
+  const el=document.getElementById('playerOv');
+  const frame=document.getElementById('playerFrame');
+  try{
+    const inFS=document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement;
+    if(!inFS){
+      const req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+      if(req){req.call(el);}
+      else if(frame&&frame.style.display!=='none'){
+        const freq=frame.requestFullscreen||frame.webkitRequestFullscreen;
+        if(freq)freq.call(frame);
+      }
+    } else {
+      const exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+      if(exit)exit.call(document);
+    }
+  }catch(err){toast('⚠️ מסך מלא לא נתמך בדפדפן זה');}
+}
+document.addEventListener('fullscreenchange',()=>{document.querySelectorAll('[onclick="toggleFS(event)"]').forEach(b=>b.textContent=document.fullscreenElement?'⊠':'⛶');});
+document.addEventListener('webkitfullscreenchange',()=>{document.querySelectorAll('[onclick="toggleFS(event)"]').forEach(b=>b.textContent=document.webkitFullscreenElement?'⊠':'⛶');});
+// ═══ BUFFERING INDICATOR ═══
+let bufferTimer=null;
+
+function showBuffer(){
+  const ov=document.getElementById('bufferOv');
+  ov.classList.add('show');
+  // Show poster if available
+  const poster=currentVODItem?.poster_path;
+  const img=document.getElementById('bufferPoster');
+  if(poster){img.src=IMG+'w342'+poster;img.style.display='block';}
+  else img.style.display='none';
+}
+
+function hideBuffer(){
+  document.getElementById('bufferOv').classList.remove('show');
+  document.getElementById('bufferPercent').textContent='';
+}
+
+// Attach buffering events - called from init
+function initBuffering(){
+  const v=document.getElementById('mainVideo');
+  if(!v)return;
+  v.addEventListener('waiting',()=>{clearTimeout(bufferTimer);bufferTimer=setTimeout(showBuffer,400);});
+  v.addEventListener('playing',()=>{clearTimeout(bufferTimer);hideBuffer();});
+  v.addEventListener('canplay',()=>{clearTimeout(bufferTimer);hideBuffer();});
+  v.addEventListener('stalled',()=>{showBuffer();document.getElementById('bufferText').textContent='חיבור איטי...';});
+  v.addEventListener('progress',()=>{
+    if(!v.duration)return;
+    try{const buf=v.buffered;if(buf.length>0){const pct=Math.round((buf.end(buf.length-1)/v.duration)*100);document.getElementById('bufferPercent').textContent='נטען '+pct+'%';}}catch(e){}
+  });
+}
+const SPEEDS=[0.5,0.75,1,1.25,1.5,2];
+let speedIdx=2;
+function cycleSpeed(e){
+  if(e)e.stopPropagation();
+  speedIdx=(speedIdx+1)%SPEEDS.length;
+  const s=SPEEDS[speedIdx];
+  document.getElementById('mainVideo').playbackRate=s;
+  document.getElementById('speedBtn').textContent=s+'x';
+  const ind=document.getElementById('speedIndicator');
+  ind.textContent=s+'x';ind.classList.add('show');
+  clearTimeout(ind._t);ind._t=setTimeout(()=>ind.classList.remove('show'),1200);
+}
+
+// ═══ PiP ═══
+function togglePiP(e){
+  if(e)e.stopPropagation();
+  const v=document.getElementById('mainVideo');
+  if(v.style.display==='none'){toast('⚠️ PiP עובד רק עם Torrentio RD');return;}
+  if(document.pictureInPictureElement){
+    document.exitPictureInPicture().catch(()=>{});
+  } else {
+    v.requestPictureInPicture().catch(()=>toast('⚠️ PiP לא נתמך'));
+  }
+}
+
+// ═══ LOCK ═══
+let isLocked=false;
+function toggleLock(e){
+  if(e)e.stopPropagation();
+  isLocked=!isLocked;
+  document.getElementById('lockOv').classList.toggle('active',isLocked);
+  toast(isLocked?'🔒 מסך נעול — לחץ נעילה לביטול':'🔓 מסך פתוח');
+}
+
+// ═══ BOOKMARK ═══
+let bookmarks=[];
+function addBookmark(e){
+  if(e)e.stopPropagation();
+  const v=document.getElementById('mainVideo');
+  if(!v.duration)return;
+  const t=Math.floor(v.currentTime);
+  bookmarks.push(t);
+  // Show dot on progress bar
+  const pct=(t/v.duration)*100;
+  const pw=document.getElementById('progressWrap');
+  const dot=document.createElement('div');
+  dot.className='bookmark-dot';
+  dot.style.left=pct+'%';
+  pw.appendChild(dot);
+  toast('🔖 נשמר '+fmt(t));
+}
+
+// ═══ SUBTITLE SETTINGS ═══
+let subSize=100,subColor='white',subPos=90;
+
+function openSubSettings(){
+  document.getElementById('subSettingsModal').classList.add('open');
+}
+function closeSubSettings(){
+  document.getElementById('subSettingsModal').classList.remove('open');
+}
+function setSubSize(size){
+  subSize=size;
+  applySubStyle();
+}
+function setSubColor(color){
+  subColor=color;
+  applySubStyle();
+}
+function setSubPosition(pos){
+  subPos=pos;
+  applySubStyle();
+}
+function applySubStyle(){
+  const v=document.getElementById('mainVideo');
+  if(!v)return;
+  // Apply via CSS on video::cue
+  let style=document.getElementById('subStyle');
+  if(!style){style=document.createElement('style');style.id='subStyle';document.head.appendChild(style);}
+  style.textContent=`video::cue{font-size:${subSize}%;color:${subColor};background:rgba(0,0,0,0.6);line-height:1.5;}`;
+  // Move subtitles
+  for(let i=0;i<v.textTracks.length;i++){
+    if(v.textTracks[i].mode==='showing'){
+      try{v.textTracks[i].cues&&Array.from(v.textTracks[i].cues).forEach(c=>c.line=subPos);}catch(e){}
+    }
+  }
+}
+
+// ═══ SWIPE GESTURES ═══
+let touchStartX=0,touchStartY=0,touchStartVol=0,touchStartTime=0;
+let isSwiping=false;
+
+document.getElementById('videoContainer').addEventListener('touchstart',e=>{
+  if(isLocked)return;
+  touchStartX=e.touches[0].clientX;
+  touchStartY=e.touches[0].clientY;
+  touchStartVol=document.getElementById('mainVideo').volume;
+  touchStartTime=document.getElementById('mainVideo').currentTime;
+  isSwiping=false;
+},{passive:true});
+
+document.getElementById('videoContainer').addEventListener('touchmove',e=>{
+  if(isLocked)return;
+  const dx=e.touches[0].clientX-touchStartX;
+  const dy=e.touches[0].clientY-touchStartY;
+  const v=document.getElementById('mainVideo');
+  
+  if(Math.abs(dy)>Math.abs(dx)&&Math.abs(dy)>15){
+    // Vertical swipe - volume
+    isSwiping=true;
+    const rect=document.getElementById('videoContainer').getBoundingClientRect();
+    const deltaVol=-(dy/rect.height)*2;
+    const newVol=Math.max(0,Math.min(1,touchStartVol+deltaVol));
+    v.volume=newVol;
+    const sl=document.getElementById('volSlider');
+    sl.value=newVol*100;sl.style.setProperty('--v',(newVol*100)+'%');
+    const ind=document.getElementById('volIndicator');
+    ind.textContent='🔊 '+Math.round(newVol*100)+'%';
+    ind.classList.add('show');
+    clearTimeout(ind._t);ind._t=setTimeout(()=>ind.classList.remove('show'),1200);
+  } else if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>20&&v.duration){
+    // Horizontal swipe - seek
+    isSwiping=true;
+    const seekDelta=(dx/window.innerWidth)*60;
+    const newTime=Math.max(0,Math.min(v.duration,touchStartTime+seekDelta));
+    v.currentTime=newTime;
+    const ind=document.getElementById('speedIndicator');
+    ind.textContent=(dx>0?'⏩ +':' ⏪ ')+Math.round(Math.abs(seekDelta))+'s';
+    ind.classList.add('show');
+    clearTimeout(ind._t);ind._t=setTimeout(()=>ind.classList.remove('show'),800);
+  }
+},{passive:true});
+
+document.getElementById('videoContainer').addEventListener('touchend',()=>{
+  setTimeout(()=>{isSwiping=false;},100);
+},{passive:true});
+
+// ═══ TIME TOOLTIP ON PROGRESS BAR ═══
+document.getElementById('progressWrap').addEventListener('mousemove',e=>{
+  const v=document.getElementById('mainVideo');
+  if(!v.duration)return;
+  const pw=document.getElementById('progressWrap');
+  const r=pw.getBoundingClientRect();
+  const pct=(e.clientX-r.left)/r.width;
+  const time=pct*v.duration;
+  const tip=document.getElementById('timeTooltip');
+  tip.textContent=fmt(time);
+  tip.style.left=(e.clientX-r.left)+'px';
+  tip.style.display='block';
+});
+document.getElementById('progressWrap').addEventListener('mouseleave',()=>{
+  document.getElementById('timeTooltip').style.display='none';
+});
+
+
+let tapTimer=null,tapCount=0;
+function handleVideoTap(e){
+  if(e.target.closest('#playerBar')||e.target.closest('#playerControls')||e.target.closest('.skip-btn')||e.target.closest('#nextEpOv'))return;
+  tapCount++;
+  if(tapCount===1){
+    tapTimer=setTimeout(()=>{
+      tapCount=0;
+      toggleControls(e);
+    },250);
+  } else if(tapCount===2){
+    clearTimeout(tapTimer);tapCount=0;
+    const rect=document.getElementById('videoContainer').getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    if(x<rect.width/2){
+      skipB(e);
+      showTapEffect('left');
+    } else {
+      skipF(e);
+      showTapEffect('right');
+    }
+  }
+}
+
+function showTapEffect(side){
+  const el=document.getElementById('tap'+side.charAt(0).toUpperCase()+side.slice(1));
+  if(!el)return;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),600);
+}
+
+// ═══ SUBTITLE TRANSLATION - Multi-source with fallback ═══
+
+// Source 1: Google Translate (best quality)
+async function translateGoogle(text){
+  try{
+    const url=`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=he&dt=t&q=${encodeURIComponent(text)}`;
+    const r=await fetch(url);
+    const d=await r.json();
+    let result='';
+    if(d&&d[0])for(const part of d[0]){if(part&&part[0])result+=part[0];}
+    return result||null;
+  }catch(e){return null;}
+}
+
+// Source 2: MyMemory (backup)
+async function translateMyMemory(text){
+  try{
+    const r=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0,500))}&langpair=en|he&de=streamflix@gmail.com`);
+    const d=await r.json();
+    const t=d.responseData?.translatedText;
+    return t&&t!=='NO QUERY SPECIFIED'?t:null;
+  }catch(e){return null;}
+}
+
+// Source 3: LibreTranslate public instance
+async function translateLibre(text){
+  try{
+    const r=await fetch('https://translate.argosopentech.com/translate',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({q:text,source:'auto',target:'he',format:'text'})
+    });
+    const d=await r.json();
+    return d.translatedText||null;
+  }catch(e){return null;}
+}
+
+// Source 4: Lingva Translate (Google mirror)
+async function translateLingva(text){
+  try{
+    const encoded=encodeURIComponent(text);
+    const r=await fetch(`https://lingva.ml/api/v1/auto/he/${encoded}`);
+    const d=await r.json();
+    return d.translation||null;
+  }catch(e){return null;}
+}
+
+// Main translate function - tries all sources
+// HuggingFace via server (Helsinki-NLP - best quality)
+async function translateHuggingFace(text){
+  try{
+    const r=await fetch('/api/translate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const d=await r.json();
+    return d.translated||null;
+  }catch(e){return null;}
+}
+
+async function translateText(text){
+  if(!text||!text.trim())return text;
+  
+  // Try all sources in order - HuggingFace first (best quality)
+  const sources=[translateHuggingFace, translateGoogle, translateLingva, translateMyMemory, translateLibre];
+  for(const source of sources){
+    const result=await source(text);
+    if(result&&result.trim()&&result!==text){
+      return result;
+    }
+  }
+  return text; // Return original if all fail
+}
+
+async function translateSRT(srtText){
+  try{
+    const blocks=srtText.trim().split(/\n\n+/);
+    const result=[];
+    const allTexts=[];
+    const blockMap=[];
+    
+    for(const block of blocks){
+      const lines=block.split('\n');
+      const metas=[];
+      for(const line of lines){
+        if(/^\d+$/.test(line.trim())||/-->/.test(line)){
+          metas.push({type:'meta',val:line});
+        } else if(line.trim()){
+          metas.push({type:'text',idx:allTexts.length});
+          allTexts.push(line.trim());
+        } else {
+          metas.push({type:'empty'});
+        }
+      }
+      blockMap.push(metas);
+    }
+    
+    if(!allTexts.length)return srtText;
+    
+    const translatedTexts=new Array(allTexts.length);
+    const batchSize=25;
+    
+    for(let i=0;i<allTexts.length;i+=batchSize){
+      const batch=allTexts.slice(i,i+batchSize);
+      const joined=batch.join('\n');
+      const translated=await translateText(joined);
+      const lines=(translated||joined).split('\n');
+      for(let j=0;j<batch.length;j++){
+        translatedTexts[i+j]=lines[j]||batch[j];
+      }
+      if(i+batchSize<allTexts.length)await new Promise(r=>setTimeout(r,80));
+    }
+    
+    for(const metas of blockMap){
+      const lines=metas.map(m=>{
+        if(m.type==='meta')return m.val;
+        if(m.type==='empty')return '';
+        return translatedTexts[m.idx]||allTexts[m.idx]||'';
+      });
+      result.push(lines.join('\n'));
+    }
+    
+    return result.join('\n\n');
+  }catch(e){
+    console.log('Translation error:',e);
+    return null;
+  }
+}
+
+async function loadAndTranslateSub(url,name,fileId){
+  closeSubModal();
+  toast('🔄 מוריד ומתרגם כתוביות...');
+  try{
+    let dlUrl=url;
+    if(fileId){
+      const r=await fetch('https://api.opensubtitles.com/api/v1/download',{
+        method:'POST',
+        headers:{'Api-Key':'uXMNABAThAoHpgZhdq6j4ncNifNNUmp5','Content-Type':'application/json'},
+        body:JSON.stringify({file_id:fileId})
+      });
+      const d=await r.json();
+      if(d.link)dlUrl=d.link;
+    }
+    if(!dlUrl){toast('❌ קישור לא זמין');return;}
+    const resp=await fetch(dlUrl);
+    const text=await resp.text();
+    toast('🔄 מתרגם לעברית...');
+    const translated=await translateSRT(text);
+    if(!translated){toast('❌ תרגום נכשל');return;}
+    applySubtitleText(translated,'עברית (תורגם)');
+    toast('✅ כתוביות תורגמו לעברית!');
+  }catch(err){
+    toast('❌ שגיאה בתרגום');
+  }
+}
+
+function applySubtitleText(text,label){
+  const video=document.getElementById('mainVideo');
+  Array.from(video.querySelectorAll('track')).forEach(t=>t.remove());
+  const blob=new Blob([text],{type:'text/vtt'});
+  const objUrl=URL.createObjectURL(blob);
+  const track=document.createElement('track');
+  track.kind='subtitles';
+  track.label=label||'כתוביות';
+  track.srclang='he';
+  track.src=objUrl;
+  track.default=true;
+  video.appendChild(track);
+  if(video.textTracks[0])video.textTracks[0].mode='showing';
+}
+
+// Auto-load Hebrew subtitles with AI translation fallback
+async function autoLoadSubtitles(item){
+  try{
+    const imdbId=item.imdb_id||item.external_ids?.imdb_id||'';
+    const title=encodeURIComponent(item.title||item.name||'');
+    if(!imdbId&&!title)return;
+
+    // Use server proxy to avoid CORS
+    const apiUrl='/api/subtitles/'+(imdbId||'unknown')+'?title='+title;
+    const r=await fetch(apiUrl);
+    const data=await r.json();
+
+    if(!data.url)return;
+
+    // Get subtitle content via proxy
+    const contentR=await fetch('/api/subtitle-content?url='+encodeURIComponent(data.url));
+    const contentData=await contentR.json();
+    let text=contentData.content;
+
+    if(!text)return;
+
+    // If English subtitle — translate to Hebrew
+    if(data.needs_translation){
+      toast('🔄 מתרגם כתוביות לעברית...');
+      const translated=await translateSRT(text);
+      if(translated){
+        applySubtitleText(translated,'עברית (AI)');
+        toast('✅ כתוביות עברית (תורגמו)');
+        return;
+      }
+    }
+
+    applySubtitleText(text,'עברית');
+    toast('💬 כתוביות עברית נטענו — '+data.source);
+  }catch(e){console.log('Subtitle error:',e);}
+}
+function selectHebrewTrack(){
+  const v=document.getElementById('mainVideo');
+  if(!v||!v.textTracks||!v.textTracks.length)return;
+  
+  let foundHebrew=false;
+  
+  // First pass - find and enable Hebrew
+  for(let i=0;i<v.textTracks.length;i++){
+    const t=v.textTracks[i];
+    const isHe=t.language==='he'||t.language==='heb'||
+                t.label?.toLowerCase().includes('heb')||
+                t.label?.includes('עב')||
+                t.label?.toLowerCase().includes('hebrew');
+    if(isHe&&!foundHebrew){
+      t.mode='showing';
+      foundHebrew=true;
+    } else {
+      // Disable Arabic, English and any other language
+      t.mode='disabled';
+    }
+  }
+  
+  if(foundHebrew){
+    toast('💬 כתוביות עברית פעילות');
+  }
+}
+function showBar(){
+  const bar=document.getElementById('playerBar'),ctrl=document.getElementById('playerControls');
+  bar.classList.remove('hide');ctrl.classList.remove('hide');
+  clearTimeout(barTimer);
+  barTimer=setTimeout(()=>{bar.classList.add('hide');ctrl.classList.add('hide');},3500);
+}
+
+function toggleControls(e){if(e)e.stopPropagation();showBar();}
+
+// Keep controls visible on mouse move
+document.getElementById('playerOv').addEventListener('mousemove',()=>showBar());
+// Keep controls visible when hovering over controls themselves
+document.getElementById('playerOv').addEventListener('mouseenter',()=>showBar());
+
+document.getElementById('mainVideo').addEventListener('loadedmetadata',function(){
+  selectHebrewTrack();
+  setTimeout(selectHebrewTrack,1500);
+});
+function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return`${m}:${sec<10?'0':''}${sec}`}
+document.getElementById('mainVideo').ontimeupdate=function(){if(isLive||!this.duration)return;const p=(this.currentTime/this.duration)*100;document.getElementById('progressBar').style.width=p+'%';document.getElementById('progressWrap').style.setProperty('--p',p+'%');document.getElementById('timeDisplay').textContent=`${fmt(this.currentTime)} / ${fmt(this.duration)}`;document.getElementById('ppBtn').textContent=this.paused?'▶':'⏸';};
+
+// ═══ PROFILES ═══
+const DEFAULT_PROFILES=[
+  {id:1,name:'פרופיל 1',avatar:'🎬',color:'#2563EB'},
+  {id:2,name:'פרופיל 2',avatar:'🎭',color:'#7C3AED'},
+  {id:3,name:'פרופיל 3',avatar:'🎪',color:'#059669'},
+  {id:4,name:'פרופיל 4',avatar:'🎡',color:'#DC2626'},
+];
+let profiles=JSON.parse(localStorage.getItem('sf_profiles')||'null')||DEFAULT_PROFILES;
+let activeProfileId=parseInt(localStorage.getItem('sf_active_profile')||'1');
+
+function getCurrentProfile(){
+  return profiles.find(p=>p.id===activeProfileId)||profiles[0];
+}
+
+function getProfileKey(key){
+  return `sf_${key}_p${activeProfileId}`;
+}
+
+function switchProfile(id){
+  activeProfileId=id;
+  localStorage.setItem('sf_active_profile',id);
+  // Reload profile data
+  watchlist=JSON.parse(localStorage.getItem(getProfileKey('watchlist'))||'[]');
+  history_=JSON.parse(localStorage.getItem(getProfileKey('history'))||'[]');
+  continueWatching=JSON.parse(localStorage.getItem(getProfileKey('continue'))||'[]');
+  const p=getCurrentProfile();
+  document.getElementById('profileAvatar').textContent=p.avatar;
+  document.getElementById('profileName').textContent=p.name;
+  toast(`✅ עברת לפרופיל: ${p.name}`);
+  goPage('home');
+}
+
+function renderProfiles(){
+  const grid=document.getElementById('profilesGrid');
+  grid.innerHTML=profiles.map(p=>`
+    <div class="profile-card${p.id===activeProfileId?' active-profile':''}" onclick="switchProfile(${p.id})">
+      <div class="pc-check">✓</div>
+      <div class="pc-avatar" style="background:${p.color}22;border-color:${p.id===activeProfileId?p.color:'transparent'}">${p.avatar}</div>
+      <div class="pc-name">${p.name}</div>
+      <div class="pc-sub">${p.id===activeProfileId?'פעיל':'לחץ לבחירה'}</div>
+    </div>`).join('');
+}
+
+// ═══ CONTINUE WATCHING ═══
+let continueWatching=JSON.parse(localStorage.getItem('sf_continue_p1')||'[]');
+
+function saveProgress(item, season, episode, time, duration){
+  const key=getProfileKey('continue');
+  continueWatching=JSON.parse(localStorage.getItem(key)||'[]');
+  const existing=continueWatching.findIndex(c=>c.id===item.id);
+  const entry={
+    id:item.id,title:item.title||item.name,poster:item.poster_path,
+    type:item.media_type,season,episode,time,duration,
+    progress:duration?Math.round((time/duration)*100):0,
+    updatedAt:Date.now()
+  };
+  if(existing>=0)continueWatching[existing]=entry;
+  else continueWatching.unshift(entry);
+  if(continueWatching.length>20)continueWatching=continueWatching.slice(0,20);
+  localStorage.setItem(key,JSON.stringify(continueWatching));
+}
+
+function renderContinue(){
+  const el=document.getElementById('continueList');
+  if(!el)return;
+  continueWatching=JSON.parse(localStorage.getItem(getProfileKey('continue'))||'[]');
+  if(!continueWatching.length){
+    el.innerHTML='<div class="empty-state"><div class="ei">▶️</div><p>אין צפייה בהמשך.<br>התחל לצפות בסרטים!</p></div>';
+    return;
+  }
+  el.innerHTML=continueWatching.map(c=>`
+    <div class="wl-item" onclick="openDetailById(${c.id},'${c.type}')">
+      ${c.poster?`<img class="wl-poster" src="${IMG}w92${c.poster}" onerror="this.style.display='none'">`:'<div class="wl-poster" style="display:flex;align-items:center;justify-content:center;font-size:1.5rem">🎬</div>'}
+      <div class="wl-info">
+        <div class="wl-title">${c.title}</div>
+        <div class="wl-meta">${c.type==='tv'?'עונה '+c.season+' פרק '+c.episode:'סרט'} · ${c.progress}%</div>
+        <div style="height:3px;background:var(--border);border-radius:2px;margin-top:0.35rem">
+          <div style="height:100%;width:${c.progress}%;background:var(--primary);border-radius:2px"></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══ NEXT EPISODE ═══
+let nextEpData=null, nextEpTimer=null, nextEpCountdownVal=10;
+
+function showNextEpBar(seriesId, season, episode, title){
+  clearNextEpBar();
+  nextEpData={seriesId,season,episode};
+  document.getElementById('nextEpTitle').textContent=`עונה ${season} פרק ${episode}`;
+  document.getElementById('nextEpSub').textContent=title||'';
+  nextEpCountdownVal=10;
+  document.getElementById('nextEpCountdown').textContent=nextEpCountdownVal;
+  document.getElementById('nextEpOv').style.display='block';
+  nextEpTimer=setInterval(()=>{
+    nextEpCountdownVal--;
+    document.getElementById('nextEpCountdown').textContent=nextEpCountdownVal;
+    if(nextEpCountdownVal<=0){clearNextEpBar();playNextEp();}
+  },1000);
+}
+
+function playNextEp(){
+  clearNextEpBar();
+  if(!nextEpData||!currentDetail)return;
+  const {season,episode}=nextEpData;
+  // Use preloaded stream if available
+  if(window._nextEpStream&&
+     window._nextEpStream.item?.id===currentDetail.id&&
+     window._nextEpStream.e===episode&&
+     window._nextEpStream.s===season){
+    const {streams}=window._nextEpStream;
+    window._nextEpStream=null;
+    currentEpisode={s:season,e:episode};
+    openPlayerUI();
+    playRDStreams(currentDetail,streams,'tv',season,episode);
+    return;
+  }
+  playVOD(currentDetail,currentSourceIdx,season,episode);
+}
+
+function skipNextEp(){clearNextEpBar();}
+
+function clearNextEpBar(){
+  clearInterval(nextEpTimer);
+  const ov=document.getElementById('nextEpOv');
+  if(ov)ov.style.display='none';
+  nextEpData=null;
+}
+
+// Auto-detect episode end for next episode
+document.getElementById('mainVideo').addEventListener('timeupdate',function(){
+  if(!currentDetail||currentDetail.media_type!=='tv')return;
+  if(!this.duration||this.duration<60)return;
+  const pct=(this.currentTime/this.duration)*100;
+  if(pct>=92&&!nextEpData){
+    // Find next episode
+    const nextEp=currentEpisode.e+1;
+    showNextEpBar(currentDetail.id,currentEpisode.s,nextEp,currentDetail.name);
+  }
+});
+
+// ═══ TOP ISRAEL (trending in IL) ═══
+async function loadTopIsrael(){
+  // Use TMDB trending + Hebrew region
+  const data=await tmdb('/trending/all/week',{region:'IL'});
+  const el=document.getElementById('topIsraelCarousel');
+  if(el)el.innerHTML=(data.results||[]).slice(0,20).map(makeTCard).join('');
+}
+
+// ═══ RELEASE DATES ═══
+async function getNextEpisodeDate(seriesId){
+  try{
+    const data=await tmdb(`/tv/${seriesId}`);
+    const next=data.next_episode_to_air;
+    if(next){
+      const date=new Date(next.air_date);
+      const now=new Date();
+      const diff=Math.ceil((date-now)/(1000*60*60*24));
+      if(diff>0)return `📅 פרק ${next.episode_number} — בעוד ${diff} ימים (${next.air_date})`;
+      else return `📅 פרק ${next.episode_number} — יצא היום!`;
+    }
+  }catch(e){}
+  return null;
+}
+
+
+let allSubs=[];
+let currentSubTrack=null;
+
+async function openSubModal(e){
+  if(e)e.stopPropagation();
+  document.getElementById('subModal').classList.add('open');
+  document.getElementById('subList').innerHTML='<div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div><div class="sk-card"><div class="sk-poster skeleton"></div><div class="sk-info"><div class="sk-line skeleton"></div><div class="sk-line sk-line-short skeleton"></div></div></div>';
+  document.getElementById('subSearch').value='';
+
+  const item=currentVODItem;
+  if(!item){document.getElementById('subList').innerHTML='<div style="color:var(--muted);font-size:0.8rem;padding:1rem">פתח סרט קודם</div>';return;}
+
+  const imdbId=item.imdb_id||item.external_ids?.imdb_id||'';
+  const title=item.title||item.name||'';
+
+  allSubs=[];
+
+  // Fetch from OpenSubtitles API with key
+  try{
+    const url=`https://api.opensubtitles.com/api/v1/subtitles?imdb_id=${imdbId?.replace('tt','')}&languages=he&order_by=download_count`;
+    const r=await fetch(url,{headers:{'Api-Key':'uXMNABAThAoHpgZhdq6j4ncNifNNUmp5','Content-Type':'application/json'}});
+    const data=await r.json();
+    if(data.data&&Array.isArray(data.data)){
+      allSubs=[...allSubs,...data.data.slice(0,50).map(s=>({
+        name:s.attributes?.release||title,
+        lang:s.attributes?.language||'',
+        langCode:s.attributes?.language||'',
+        url:s.attributes?.url||'',
+        fileId:s.attributes?.files?.[0]?.file_id,
+        source:'OpenSubtitles',
+        rating:s.attributes?.ratings||0,
+      }))];
+    }
+  }catch(err){console.log('OpenSubs error:',err);}
+
+  // Fetch from SubDL
+  try{
+    const r2=await fetch(`https://api.subdl.com/api/v1/subtitles?api_key=free&imdb_id=${imdbId}&languages=HE`);
+    const d2=await r2.json();
+    if(d2.subtitles){
+      allSubs=[...allSubs,...d2.subtitles.slice(0,20).map(s=>({
+        name:s.name||title,
+        lang:s.language||'',
+        langCode:(s.language||'').toLowerCase(),
+        url:s.url?`https://dl.subdl.com${s.url}`:'',
+        source:'SubDL',
+        rating:0,
+      }))];
+    }
+  }catch(err){console.log('SubDL error:',err);}
+
+  if(!allSubs.length){
+    document.getElementById('subList').innerHTML='<div style="color:var(--muted);font-size:0.8rem;padding:1rem;text-align:center">לא נמצאו כתוביות</div>';
+    return;
+  }
+
+  // Sort: Hebrew first, then English
+  allSubs.sort((a,b)=>{
+    const heA=a.langCode.includes('he')||a.langCode.includes('heb')?0:1;
+    const heB=b.langCode.includes('he')||b.langCode.includes('heb')?0:1;
+    return heA-heB;
+  });
+
+  renderSubs(allSubs);
+}
+
+let showAllLangs=false;
+
+function renderSubs(subs){
+  // Filter Hebrew only by default
+  const hebSubs=subs.filter(s=>{
+    const lc=(s.langCode||'').toLowerCase();
+    const lg=(s.lang||'').toLowerCase();
+    return lc.includes('he')||lc.includes('heb')||lg.includes('hebrew')||lg.includes('עברית');
+  });
+  
+  const display=showAllLangs?subs:hebSubs;
+  
+  const toggleBtn=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+    <span style="font-size:0.7rem;color:var(--muted)">${display.length} כתוביות עברית</span>
+    <button onclick="showAllLangs=!showAllLangs;renderSubs(allSubs)" style="background:rgba(79,142,255,0.1);border:1px solid rgba(79,142,255,0.2);color:var(--accent);padding:0.2rem 0.6rem;border-radius:8px;font-size:0.65rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
+      ${showAllLangs?'🇮🇱 עברית בלבד':'🌍 כל השפות'}
+    </button>
+  </div>`;
+
+  document.getElementById('subList').innerHTML=toggleBtn+(display.length
+    ?display.map((s,i)=>{
+      const isHe=true; // always Hebrew in filtered view
+      const langLabel='🇮🇱 עברית';
+      return `<div class="sub-item" onclick="loadSubtitle('${s.url}','${s.name.replace(/'/g,'')}',${s.fileId||'null'})">
+        <span class="sub-lang sub-he">${langLabel}</span>
+        <div style="flex:1;min-width:0">
+          <div class="sub-name">${s.name}</div>
+          <div class="sub-source">${s.source}</div>
+        </div>
+      </div>`;
+    }).join('')
+    :`<div style="text-align:center;padding:1rem">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">😔</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem">לא נמצאו כתוביות עברית</div>
+        <button onclick="showAllLangs=true;renderSubs(allSubs)" style="background:rgba(79,142,255,0.15);border:1px solid rgba(79,142,255,0.3);color:var(--accent);padding:0.4rem 0.8rem;border-radius:8px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif">
+          🔄 נסה לתרגם מאנגלית
+        </button>
+      </div>`);
+}
+
+function filterSubs(q){
+  if(!q){renderSubs(allSubs);return;}
+  renderSubs(allSubs.filter(s=>s.name.toLowerCase().includes(q.toLowerCase())||s.lang.toLowerCase().includes(q.toLowerCase())));
+}
+
+async function loadSubtitle(url, name, fileId){
+  closeSubModal();
+  try{
+    let dlUrl=url;
+    // If we have a fileId, use OpenSubtitles download API
+    if(fileId){
+      const r=await fetch('https://api.opensubtitles.com/api/v1/download',{
+        method:'POST',
+        headers:{'Api-Key':'uXMNABAThAoHpgZhdq6j4ncNifNNUmp5','Content-Type':'application/json'},
+        body:JSON.stringify({file_id:fileId})
+      });
+      const d=await r.json();
+      if(d.link)dlUrl=d.link;
+    }
+    if(!dlUrl){toast('❌ קישור לא זמין');return;}
+    const video=document.getElementById('mainVideo');
+    Array.from(video.querySelectorAll('track')).forEach(t=>t.remove());
+    const resp=await fetch(dlUrl);
+    const blob=await resp.blob();
+    const objUrl=URL.createObjectURL(blob);
+    const track=document.createElement('track');
+    track.kind='subtitles';
+    track.label=name;
+    track.src=objUrl;
+    track.default=true;
+    video.appendChild(track);
+    if(video.textTracks[0])video.textTracks[0].mode='showing';
+    toast('✅ כתוביות נטענו: '+name);
+  }catch(err){
+    toast('❌ שגיאה בטעינת כתוביות');
+  }
+}
+
+function closeSubModal(){document.getElementById('subModal').classList.remove('open');}
+
+function openSrcModal(e){if(e)e.stopPropagation();document.getElementById('srcList').innerHTML=VOD_SOURCES.map((s,i)=>`<div class="src-item${i===currentSourceIdx?' active':''}" onclick="switchSource(${i})"><div class="src-item-icon">${s.icon}</div><div style="flex:1"><div class="src-item-name">${s.name}</div><div class="src-item-desc">${s.desc}</div></div><span class="src-item-badge ${s.badge}">${i===0?'מומלץ':'חלופי'}</span></div>`).join('');document.getElementById('srcModal').classList.add('open');}
+function closeSrcModal(){document.getElementById('srcModal').classList.remove('open');}
+function switchSource(idx){closeSrcModal();if(!currentVODItem)return;playVOD(currentVODItem,idx,currentEpisode.s,currentEpisode.e);}
+
+function switchAddonTab(tab){['my','browse'].forEach(t=>{document.getElementById('atab-'+t).classList.toggle('active',t===tab);document.getElementById('apanel-'+t).style.display=t===tab?'block':'none';});if(tab==='my')renderAddonList();if(tab==='browse')renderPresets();}
+function selType(el,type){selectedAddonType=type;document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function saveAddon(name,url,icon,type){
+  if(!name||!url||!url.startsWith('http')){toast('פרטים חסרים');return;}
+  if(addons.some(a=>a.url===url)){toast('תוסף כבר קיים');return;}
+  addons.push({id:Date.now(),name,url,icon:icon||'📡',type:type||'stremio',active:true});
+  localStorage.setItem('sf_addons',JSON.stringify(addons));
+  toast('✅ '+name+' נוסף!');
+  switchAddonTab('my');
+}
+function deleteAddon(id){addons=addons.filter(a=>a.id!==id);localStorage.setItem('sf_addons',JSON.stringify(addons));renderAddonList();toast('נמחק');}
+function renderAddonList(){const el=document.getElementById('addonList');if(!addons.length){el.innerHTML='<div class="empty-state"><div class="ei">🧩</div><p>אין תוספים.</p></div>';return;}el.innerHTML=addons.map(a=>`<div class="addon-card"><div class="ac-icon">${a.icon||'📡'}</div><div class="ac-body"><div class="ac-head"><div class="ac-name">${a.name}</div><span class="ac-badge ab-on">פעיל</span></div><div class="ac-url">${a.url}</div><div class="ac-type">${a.type}</div><div class="ac-actions"><button class="ac-btn" onclick="navigator.clipboard?.writeText('${a.url}').then(()=>toast('הועתק!'))">📋 העתק</button><button class="ac-btn danger" onclick="deleteAddon(${a.id})">🗑 מחק</button></div></div></div>`).join('');}
+function renderPresets(){document.getElementById('presetGrid').innerHTML=[{name:'Cinemeta',url:'https://v3-cinemeta.strem.io/manifest.json',icon:'🎬',type:'stremio',desc:'קטלוג IMDB'},{name:'Torrentio',url:'https://torrentio.strem.fun/manifest.json',icon:'⚡',type:'stremio',desc:'מקורות מרובים'}].map((p,i)=>`<div class="preset-item" onclick="addPreset(${i},'${p.url}','${p.name}','${p.icon}','${p.type}')"><span class="pi-ico">${p.icon}</span><div><div class="pi-name">${p.name}</div><div class="pi-desc">${p.desc}</div></div></div>`).join('');}
+function addPreset(i,url,name,icon,type){if(addons.some(a=>a.url===url)){toast('כבר קיים');return;}addons.push({id:Date.now(),name,url,icon,type,active:true});localStorage.setItem('sf_addons',JSON.stringify(addons));toast(name+' נוסף!');switchAddonTab('my');}
+function playGDrive(url,title){
+  url=url||'';title=title||'Google Drive';if(!url){toast('הכנס קישור');return;}const match=url.match(/\/d\/([^\/\?]+)/);if(match)url=`https://drive.google.com/uc?export=download&id=${match[1]}`;const video=document.getElementById('mainVideo');const frame=document.getElementById('playerFrame');if(hlsInst){hlsInst.destroy();hlsInst=null;}video.src=url;video.style.display='block';frame.style.display='none';document.getElementById('pTitle').textContent=title;document.getElementById('pSrcBtn').style.display='none';video.play().catch(()=>{});openPlayerUI();}
+
+let toastTimer;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2500);}
+function clearStorage(){if(confirm('למחוק הכל?')){localStorage.clear();watchlist=[];history_=[];addons=[...DEFAULT_ADDONS];toast('נמחק');}}
+
+async function init(){
+  // Load active profile
+  const p=getCurrentProfile();
+  document.getElementById('profileAvatar').textContent=p.avatar;
+  document.getElementById('profileName').textContent=p.name;
+  watchlist=JSON.parse(localStorage.getItem(getProfileKey('watchlist'))||'[]');
+  history_=JSON.parse(localStorage.getItem(getProfileKey('history'))||'[]');
+  continueWatching=JSON.parse(localStorage.getItem(getProfileKey('continue'))||'[]');
+
+  updateNavIndicator('home');
+  await initHero();
+  loadCarousel('/trending/all/week','trendingCarousel');
+  loadCarousel('/movie/popular','moviesCarousel');
+  loadCarousel('/tv/popular','seriesCarousel');
+  loadCarousel('/movie/top_rated','topCarousel');
+  loadCarousel('/movie/now_playing','newCarousel');
+  loadTopIsrael();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{init();initProgressTouch();initBuffering();});
+
+// ═══ NAV INDICATOR ═══
+const NAV_PAGES=['home','movies','search','series','profile'];
+function updateNavIndicator(pg){
+  const idx=NAV_PAGES.indexOf(pg);
+  if(idx<0)return;
+  const nav=document.getElementById('bottomNav');
+  const items=nav.querySelectorAll('.bnav-item');
+  const indicator=document.getElementById('navIndicator');
+  if(!indicator||!items[idx])return;
+  const item=items[idx];
+  const navRect=nav.getBoundingClientRect();
+  const itemRect=item.getBoundingClientRect();
+  indicator.style.width=itemRect.width*0.5+'px';
+  indicator.style.left=(itemRect.left-navRect.left+itemRect.width*0.25)+'px';
+}
+
+// ═══ RIPPLE EFFECT ═══
+function addRipple(el,e){
+  const circle=document.createElement('span');
+  const rect=el.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height);
+  circle.style.cssText=`
+    position:absolute;width:${size}px;height:${size}px;
+    left:${(e.clientX-rect.left)-size/2}px;
+    top:${(e.clientY-rect.top)-size/2}px;
+    background:rgba(255,255,255,0.2);border-radius:50%;
+    transform:scale(0);animation:ripple-anim .5s linear;
+    pointer-events:none;z-index:0;
+  `;
+  el.style.position='relative';el.style.overflow='hidden';
+  el.appendChild(circle);
+  setTimeout(()=>circle.remove(),500);
+}
+
+document.addEventListener('click',e=>{
+  const el=e.target.closest('.bnav-item,.src-item,.ep-item,.wl-item');
+  if(el)addRipple(el,e);
+});
+
+// ═══ HAPTIC FEEDBACK ═══
+function haptic(type='light'){
+  if(navigator.vibrate){
+    if(type==='light')navigator.vibrate(10);
+    else if(type==='medium')navigator.vibrate(25);
+    else if(type==='heavy')navigator.vibrate([15,10,15]);
+  }
+}
+
+// Add haptic to nav buttons
+document.querySelectorAll('.bnav-item').forEach(btn=>{
+  btn.addEventListener('touchstart',()=>haptic('light'),{passive:true});
+});
+
+// ═══ SWIPE BACK (global) ═══
+let swipeStartX=0,swipeStartY=0;
+const pageHistory=['home'];
+
+document.addEventListener('touchstart',e=>{
+  if(document.getElementById('playerOv').classList.contains('open'))return;
+  if(document.getElementById('detailOv').classList.contains('open'))return;
+  swipeStartX=e.touches[0].clientX;
+  swipeStartY=e.touches[0].clientY;
+},{passive:true});
+
+document.addEventListener('touchend',e=>{
+  if(document.getElementById('playerOv').classList.contains('open'))return;
+  if(document.getElementById('detailOv').classList.contains('open'))return;
+  const dx=e.changedTouches[0].clientX-swipeStartX;
+  const dy=Math.abs(e.changedTouches[0].clientY-swipeStartY);
+  // Swipe right from edge = go back
+  if(dx>60&&dy<50&&swipeStartX<40){
+    if(pageHistory.length>1){
+      pageHistory.pop();
+      goPage(pageHistory[pageHistory.length-1],true);
+    }
+  }
+},{passive:true});
+
+// ═══ LIKE ANIMATION ═══
+function animateLike(btn){
+  btn.classList.remove('like-anim');
+  void btn.offsetWidth;
+  btn.classList.add('like-anim');
+  haptic('medium');
+}
+
+// ═══ PARALLAX HERO ═══
+window.addEventListener('scroll',()=>{
+  const hero=document.getElementById('heroSection');
+  if(!hero)return;
+  const scroll=window.scrollY;
+  const bg=document.getElementById('heroBg');
+  if(bg&&scroll<400)bg.style.transform=`translateY(${scroll*0.3}px)`;
+},{passive:true});
+
+
+let isDarkTheme=localStorage.getItem('sf_theme')!=='light';
+function toggleTheme(){
+  isDarkTheme=!isDarkTheme;
+  document.body.classList.toggle('light',!isDarkTheme);
+  localStorage.setItem('sf_theme',isDarkTheme?'dark':'light');
+  const ico=document.getElementById('themeIco');
+  const lbl=document.getElementById('themeLabel');
+  if(ico)ico.textContent=isDarkTheme?'🌙':'☀️';
+  if(lbl)lbl.textContent=isDarkTheme?'לילה':'יום';
+  toast(isDarkTheme?'🌙 מצב לילה':'☀️ מצב יום');
+}
+if(!isDarkTheme){document.body.classList.add('light');}
+
+// ═══ DATA SAVER ═══
+let dataSaver=localStorage.getItem('sf_datasaver')==='1';
+function toggleDataSaver(){
+  dataSaver=!dataSaver;
+  localStorage.setItem('sf_datasaver',dataSaver?'1':'0');
+  const lbl=document.getElementById('dataSaverLabel');
+  if(lbl)lbl.textContent=dataSaver?'פעיל':'כבוי';
+  toast(dataSaver?'📶 חיסכון בנתונים פעיל':'📶 כבוי');
+}
+
+// ═══ VOICE SEARCH ═══
+function startVoiceSearch(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('⚠️ לא נתמך בדפדפן זה');return;}
+  const rec=new SR();
+  rec.lang='he-IL';
+  rec.onstart=()=>toast('🎤 מאזין...');
+  rec.onresult=e=>{
+    const text=e.results[0][0].transcript;
+    document.getElementById('searchInput').value=text;
+    addToSearchHistory(text);
+    handleSearch(text);
+    toast('🔍 מחפש: '+text);
+  };
+  rec.onerror=()=>toast('❌ שגיאה בחיפוש קולי');
+  rec.start();
+}
+
+// ═══ MOOD SEARCH ═══
+const MOOD_MAP={
+  comedy:{genre:35,sort:'popularity.desc'},
+  action:{genre:28,sort:'popularity.desc'},
+  romantic:{genre:10749,sort:'vote_average.desc'},
+  thriller:{genre:53,sort:'popularity.desc'},
+  horror:{genre:27,sort:'popularity.desc'},
+  family:{genre:10751,sort:'popularity.desc'},
+  scifi:{genre:878,sort:'vote_average.desc'},
+  documentary:{genre:99,sort:'vote_average.desc'},
+};
+
+async function moodSearch(mood){
+  const m=MOOD_MAP[mood];if(!m)return;
+  document.getElementById('searchGrid').innerHTML='<div class="spinner" style="margin:2rem auto;grid-column:1/-1"></div>';
+  const [movies,shows]=await Promise.all([
+    tmdb('/discover/movie',{with_genres:m.genre,sort_by:m.sort}),
+    tmdb('/discover/tv',{with_genres:m.genre,sort_by:m.sort})
+  ]);
+  const results=[
+    ...(movies.results||[]).slice(0,10).map(i=>({...i,media_type:'movie'})),
+    ...(shows.results||[]).slice(0,10).map(i=>({...i,media_type:'tv'}))
+  ].sort((a,b)=>(b.popularity||0)-(a.popularity||0));
+  document.getElementById('searchGrid').innerHTML=results.length
+    ?results.map(makeGridCard).join('')
+    :'<div class="empty-state" style="grid-column:1/-1"><div class="ei">🎭</div><p>לא נמצאו תוצאות</p></div>';
+}
+
+// ═══ SEARCH HISTORY ═══
+let searchHistory=JSON.parse(localStorage.getItem('sf_search_history')||'[]');
+function addToSearchHistory(q){
+  if(!q||q.length<2)return;
+  searchHistory=searchHistory.filter(h=>h!==q);
+  searchHistory.unshift(q);
+  if(searchHistory.length>10)searchHistory=searchHistory.slice(0,10);
+  localStorage.setItem('sf_search_history',JSON.stringify(searchHistory));
+  renderSearchHistory();
+}
+function renderSearchHistory(){
+  const el=document.getElementById('searchHistory');
+  if(!el)return;
+  if(!searchHistory.length){el.innerHTML='';return;}
+  el.innerHTML='<div style="font-size:0.65rem;color:var(--muted);margin-bottom:0.3rem">🕐 חיפושים אחרונים</div>'+
+    searchHistory.slice(0,6).map(h=>`<span class="search-hist-item" onclick="document.getElementById('searchInput').value='${h}';handleSearch('${h}')">${h}</span>`).join('');
+}
+function removeSearchHistory(q){
+  searchHistory=searchHistory.filter(h=>h!==q);
+  localStorage.setItem('sf_search_history',JSON.stringify(searchHistory));
+  renderSearchHistory();
+}
+
+// ═══ WHATSAPP SHARE ═══
+function shareToWhatsApp(item){
+  const title=item?.title||item?.name||'סרט';
+  const url='https://streamflix-server-production-e0cc.up.railway.app';
+  const msg='🎬 '+title+'\nצפה עכשיו ב-StreamFlix:\n'+url;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ═══ SHARED WATCHLIST ═══
+let mySharedCode=localStorage.getItem('sf_shared_code');
+if(!mySharedCode){mySharedCode=Math.random().toString(36).substr(2,6).toUpperCase();localStorage.setItem('sf_shared_code',mySharedCode);}
+
+function openSharedList(){
+  document.getElementById('sharedCode').textContent=mySharedCode;
+  document.getElementById('sharedModal').classList.add('open');
+  document.getElementById('friendListContent').innerHTML='';
+  document.getElementById('friendCode').value='';
+}
+function closeSharedModal(){document.getElementById('sharedModal').classList.remove('open');}
+function copySharedCode(){navigator.clipboard?.writeText(mySharedCode).then(()=>toast('📋 קוד הועתק!'));}
+function shareWhatsApp(){
+  const msg='🎬 הצטרף לרשימת הצפייה שלי ב-StreamFlix!\nקוד: *'+mySharedCode+'*\nhttps://streamflix-server-production-e0cc.up.railway.app';
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+function loadFriendList(){
+  const code=document.getElementById('friendCode').value.trim().toUpperCase();
+  if(!code||code.length<4){toast('⚠️ קוד לא תקין');return;}
+  const data=localStorage.getItem('sf_shared_wl_'+code);
+  const el=document.getElementById('friendListContent');
+  if(!data){el.innerHTML='<div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:0.5rem">לא נמצאה רשימה</div>';return;}
+  const list=JSON.parse(data);
+  el.innerHTML='<div style="font-size:0.72rem;font-weight:700;margin-bottom:0.5rem">רשימת חבר ('+list.length+' פריטים):</div>'+
+    list.slice(0,5).map(w=>'<div style="font-size:0.72rem;padding:0.3rem 0;border-bottom:1px solid var(--border)">'+w.title+'</div>').join('');
+}
+function saveSharedWatchlist(){
+  try{localStorage.setItem('sf_shared_wl_'+mySharedCode,JSON.stringify(watchlist));}catch(e){}
+}
+
+// ═══ KEYBOARD SHORTCUTS ═══
+document.addEventListener('keydown',e=>{
+  const playerOpen=document.getElementById('playerOv').classList.contains('open');
+  const v=document.getElementById('mainVideo');
+  if(!playerOpen||v.style.display==='none')return;
+  if(e.target.tagName==='INPUT')return;
+  switch(e.key){
+    case ' ':case 'k':e.preventDefault();togglePlay();break;
+    case 'ArrowRight':e.preventDefault();skipF();break;
+    case 'ArrowLeft':e.preventDefault();skipB();break;
+    case 'ArrowUp':e.preventDefault();v.volume=Math.min(1,v.volume+0.1);break;
+    case 'ArrowDown':e.preventDefault();v.volume=Math.max(0,v.volume-0.1);break;
+    case 'f':e.preventDefault();toggleFS();break;
+    case 'm':e.preventDefault();toggleMute();break;
+    case 'Escape':if(!document.fullscreenElement)closePlayer();break;
+  }
+});
+
+// ═══ SAVE POSITION & REWATCH ═══
+let savedPositions=JSON.parse(localStorage.getItem('sf_positions')||'{}');
+function savePosition(id,time,duration){
+  if(!time||!duration||time<5||time>duration-10)return;
+  savedPositions[id]={time,duration,pct:Math.round(time/duration*100)};
+  localStorage.setItem('sf_positions',JSON.stringify(savedPositions));
+}
+function getSavedPosition(id){return savedPositions[id]||null;}
+function rewatchMovie(){
+  document.getElementById('rewatchOv').classList.remove('show');
+  const v=document.getElementById('mainVideo');
+  v.currentTime=0;v.play().catch(()=>{});
+}
+document.getElementById('mainVideo').addEventListener('ended',()=>{
+  const ov=document.getElementById('rewatchOv');
+  if(ov){
+    const t=document.getElementById('rewatchTitle');
+    if(t)t.textContent=currentVODItem?.title||currentVODItem?.name||'';
+    ov.classList.add('show');
+    try{document.getElementById('videoContainer').appendChild(ov);}catch(e){}
+  }
+});
+document.getElementById('mainVideo').addEventListener('timeupdate',function(){
+  if(this.duration&&this.currentTime>5&&currentVODItem){
+    if(Math.floor(this.currentTime)%10===0){
+      savePosition(currentVODItem.id,this.currentTime,this.duration);
+      saveSharedWatchlist();
+    }
+  }
+});
+
+// ═══ NEW EPISODE NOTIFICATIONS ═══
+async function checkNewEpisodes(){
+  if(!('Notification' in window))return;
+  const followed=JSON.parse(localStorage.getItem('sf_followed')||'[]');
+  for(const show of followed){
+    try{
+      const data=await tmdb('/tv/'+show.id);
+      const next=data.next_episode_to_air;
+      if(next){
+        const diff=(new Date(next.air_date)-new Date())/(1000*60*60*24);
+        if(diff<=1&&diff>=0&&Notification.permission==='granted'){
+          new Notification('StreamFlix 🎬',{body:'פרק חדש של '+show.name+' יוצא היום!'});
+        }
+      }
+    }catch(e){}
+  }
+}
+if('Notification' in window&&Notification.permission==='default'){Notification.requestPermission();}
+setTimeout(checkNewEpisodes,5000);
+
+// ═══ PINCH TO ZOOM ═══
+let pinchStart=0;
+const vc=document.getElementById('videoContainer');
+vc.addEventListener('touchstart',e=>{if(e.touches.length===2)pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
+vc.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&pinchStart>0){
+    const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    const scale=Math.max(1,Math.min(3,dist/pinchStart));
+    document.getElementById('mainVideo').style.transform='scale('+scale+')';
+  }},{passive:true});
+vc.addEventListener('touchend',e=>{if(e.touches.length<2){pinchStart=0;}},{passive:true});
+
+// ═══ ADAPTIVE QUALITY ═══
+async function getNetworkQuality(){
+  const conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+  if(conn&&conn.downlink){
+    if(conn.downlink>=15)return '4K';
+    if(conn.downlink>=5)return '1080p';
+    return '720p';
+  }
+  return '1080p';
+}
+
+// PWA Install
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  const row=document.getElementById('installRow');
+  if(row)row.style.display='flex';
+});
+
+function installPWA(){
+  if(!deferredPrompt){
+    // iOS instructions
+    toast('ב-iOS: לחץ שתף ← הוסף למסך הבית');
+    return;
+  }
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(r=>{
+    if(r.outcome==='accepted')toast('✅ StreamFlix הותקן!');
+    deferredPrompt=null;
+    const row=document.getElementById('installRow');
+    if(row)row.style.display='none';
+  });
+}
+
+window.addEventListener('appinstalled',()=>{
+  toast('✅ StreamFlix הותקן בהצלחה!');
+  deferredPrompt=null;
+});
+
+// Register Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+
+// Improved Lazy Loading with IntersectionObserver
+const imgObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const img=entry.target;
+      if(img.dataset.src){
+        img.src=img.dataset.src;
+        img.removeAttribute('data-src');
+        imgObserver.unobserve(img);
+      }
+    }
+  });
+},{rootMargin:'200px'});
+
+// Image cache
+const imgCache=new Map();
+function openImdb(el){window.open('https://www.imdb.com/title/'+el.dataset.imdb,'_blank');}
+function getCachedImg(url){
+  if(imgCache.has(url))return imgCache.get(url);
+  imgCache.set(url,url);
+  return url;
+}
+</script>
+</body>
+</html>
