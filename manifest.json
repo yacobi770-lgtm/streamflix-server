@@ -1,6 +1,6 @@
 {
-  "name": "StreamFlix",
-  "short_name": "StreamFlix",
+  "name": "SratTV",
+"short_name": "SratTV",
   "description": "אתר סטרימינג בעברית",
   "start_url": "/",
   "display": "standalone",
